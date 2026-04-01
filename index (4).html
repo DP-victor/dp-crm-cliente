@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DP — Portal do Cliente</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --bg2: #ffffff;
+    --bg3: #eef0f6;
+    --border: rgba(0,0,0,0.07);
+    --border2: rgba(0,0,0,0.12);
+    --text: #0d1117;
+    --muted: #6b7280;
+    --accent: #89c4f4;
+    --accent-dark: #1a7fd4;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --info: #3b82f6;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-display); min-height:100vh; }
+
+  /* LOGIN */
+  #login-screen {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at 30% 40%, rgba(137,196,244,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                #f0f4ff;
+  }
+  .login-box {
+    width:400px; padding:48px 40px;
+    background:#fff; border:1px solid var(--border2);
+    border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,0.08);
+  }
+  .login-logo {
+    font-size:26px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;
+    color:var(--text);
+  }
+  .login-logo span { color:var(--accent-dark); }
+  .login-sub { font-size:13px; color:var(--muted); margin-bottom:36px; font-family:var(--font-mono); }
+  .login-box label { display:block; font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+  .login-box input {
+    width:100%; padding:12px 14px; background:var(--bg3); border:1px solid var(--border2);
+    border-radius:10px; color:var(--text); font-family:var(--font-mono); font-size:14px;
+    margin-bottom:16px; outline:none; transition:border .2s;
+  }
+  .login-box input:focus { border-color:var(--accent-dark); }
+  .btn-primary {
+    width:100%; padding:14px; background:var(--accent-dark); color:#fff;
+    border:none; border-radius:10px; font-family:var(--font-display); font-size:14px;
+    font-weight:700; cursor:pointer; transition:all .2s; margin-top:4px;
+  }
+  .btn-primary:hover { background:#1565b8; transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,127,212,0.3); }
+  .login-error { font-size:12px; color:var(--danger); margin-top:12px; text-align:center; font-family:var(--font-mono); }
+  .login-badge {
+    display:flex; align-items:center; gap:8px; margin-bottom:28px;
+    padding:10px 14px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.15);
+    border-radius:8px; font-size:12px; color:var(--accent-dark); font-family:var(--font-mono);
+  }
+
+  /* APP */
+  #app { display:none; }
+
+  /* TOPBAR */
+  .topbar {
+    position:sticky; top:0; z-index:100;
+    background:#fff; border-bottom:1px solid var(--border);
+    padding:0 32px; height:60px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 1px 8px rgba(0,0,0,0.04);
+  }
+  .topbar-logo { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+  .topbar-logo span { color:var(--accent-dark); }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .empresa-badge {
+    padding:6px 14px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.2);
+    border-radius:20px; font-size:12px; font-weight:600; color:var(--accent-dark);
+  }
+  .user-chip {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 12px; background:var(--bg3); border-radius:20px;
+  }
+  .user-dot { width:8px; height:8px; border-radius:50%; background:var(--success); }
+  .user-email { font-size:12px; color:var(--muted); font-family:var(--font-mono); }
+  .btn-logout { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:6px 10px; border-radius:6px; }
+  .btn-logout:hover { background:var(--bg3); color:var(--danger); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    background:#fff; border-bottom:1px solid var(--border);
+    padding:0 32px; display:flex; gap:4px;
+  }
+  .tab {
+    padding:14px 20px; font-size:13px; font-weight:600; color:var(--muted);
+    cursor:pointer; border-bottom:2px solid transparent; transition:all .15s;
+    white-space:nowrap;
+  }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent-dark); border-bottom-color:var(--accent-dark); }
+
+  /* MAIN */
+  .main { max-width:1100px; margin:0 auto; padding:32px 24px; }
+
+  /* SECTION */
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* HERO CARDS */
+  .hero-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+  .hero-card {
+    background:#fff; border:1px solid var(--border); border-radius:14px;
+    padding:22px 24px; transition:box-shadow .2s;
+  }
+  .hero-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.07); }
+  .hero-label { font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+  .hero-value { font-size:30px; font-weight:800; letter-spacing:-1px; color:var(--text); }
+  .hero-value.blue { color:var(--accent-dark); }
+  .hero-value.green { color:var(--success); }
+  .hero-value.amber { color:var(--warning); }
+  .hero-sub { font-size:12px; color:var(--muted); margin-top:4px; font-family:var(--font-mono); }
+
+  /* CARDS */
+  .card {
+    background:#fff; border:1px solid var(--border); border-radius:14px;
+    overflow:hidden; margin-bottom:20px;
+  }
+  .card-header {
+    padding:18px 22px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .card-title { font-size:15px; font-weight:700; }
+  .card-sub { font-size:12px; color:var(--muted); font-family:var(--font-mono); margin-top:2px; }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; }
+  thead th {
+    padding:11px 18px; text-align:left; font-size:11px; font-weight:600;
+    letter-spacing:.08em; color:var(--muted); text-transform:uppercase;
+    background:var(--bg3); border-bottom:1px solid var(--border);
+  }
+  tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:#fafbff; }
+  tbody td { padding:13px 18px; font-size:13px; }
+  .td-main { font-weight:600; font-size:14px; }
+  .td-mono { font-family:var(--font-mono); font-size:12px; color:var(--muted); }
+
+  /* BADGES */
+  .badge {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:20px;
+    font-size:11px; font-weight:600; letter-spacing:.03em;
+  }
+  .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; }
+  .badge-agendada { background:#eff6ff; color:#2563eb; }
+  .badge-realizada { background:#f0fdf4; color:#16a34a; }
+  .badge-cancelada { background:#fef2f2; color:#dc2626; }
+  .badge-ativo { background:#f0fdf4; color:#16a34a; }
+  .badge-venda { background:#eff6ff; color:#2563eb; }
+  .badge-perdido { background:#fef2f2; color:#dc2626; }
+  .badge-quente { background:#fff7ed; color:#ea580c; }
+  .badge-morno { background:#fefce8; color:#ca8a04; }
+  .badge-frio { background:#eff6ff; color:#2563eb; }
+  .badge-pendente { background:#fefce8; color:#ca8a04; }
+  .badge-pago { background:#f0fdf4; color:#16a34a; }
+  .badge-atrasado { background:#fef2f2; color:#dc2626; }
+  .badge-aberta { background:#f0fdf4; color:#16a34a; }
+  .badge-encerrada { background:#fef2f2; color:#dc2626; }
+
+  /* REUNIÃO CARD */
+  .reuniao-item {
+    padding:20px 22px; border-bottom:1px solid var(--border);
+    display:flex; gap:20px; align-items:flex-start;
+    transition:background .1s;
+  }
+  .reuniao-item:last-child { border-bottom:none; }
+  .reuniao-item:hover { background:#fafbff; }
+  .reuniao-date {
+    min-width:60px; text-align:center; padding:8px;
+    background:var(--bg3); border-radius:10px;
+  }
+  .reuniao-day { font-size:22px; font-weight:800; color:var(--accent-dark); line-height:1; }
+  .reuniao-month { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+  .reuniao-body { flex:1; }
+  .reuniao-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .reuniao-desc { font-size:12px; color:var(--muted); margin-bottom:8px; line-height:1.5; }
+  .reuniao-footer { display:flex; align-items:center; gap:10px; }
+  .btn-link {
+    font-size:12px; color:var(--accent-dark); font-weight:600;
+    text-decoration:none; display:inline-flex; align-items:center; gap:4px;
+  }
+  .btn-link:hover { text-decoration:underline; }
+
+  /* EMPTY */
+  .empty-state {
+    padding:60px 24px; text-align:center; color:var(--muted);
+  }
+  .empty-icon { font-size:36px; margin-bottom:12px; opacity:.4; }
+  .empty-text { font-size:14px; font-family:var(--font-mono); }
+
+  /* TIMELINE */
+  .timeline { padding:8px 0; }
+  .tl-item {
+    display:flex; gap:16px; padding:16px 22px;
+    border-bottom:1px solid var(--border);
+  }
+  .tl-item:last-child { border-bottom:none; }
+  .tl-dot {
+    width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0;
+  }
+  .tl-dot.realizada { background:var(--success); }
+  .tl-dot.agendada { background:var(--info); }
+  .tl-dot.cancelada { background:var(--danger); }
+  .tl-content { flex:1; }
+  .tl-title { font-size:13px; font-weight:600; }
+  .tl-date { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-top:2px; }
+  .tl-entregaveis {
+    margin-top:8px; padding:10px 14px; background:var(--bg3);
+    border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;
+    white-space:pre-wrap;
+  }
+
+  /* LOADING */
+  .loading { padding:40px; text-align:center; color:var(--muted); font-family:var(--font-mono); font-size:13px; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:28px; right:28px; padding:14px 20px;
+    background:#fff; border:1px solid var(--border2); border-radius:10px;
+    font-size:13px; font-family:var(--font-mono); z-index:2000;
+    box-shadow:0 4px 20px rgba(0,0,0,0.1);
+    transform:translateY(80px); opacity:0; transition:all .3s;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { border-color:var(--success); color:var(--success); }
+  .toast.error { border-color:var(--danger); color:var(--danger); }
+
+  /* FINANCEIRO */
+  .fin-summary {
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; padding:20px 22px;
+    border-bottom:1px solid var(--border);
+  }
+  .fin-box { text-align:center; padding:14px; background:var(--bg3); border-radius:10px; }
+  .fin-box-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+  .fin-box-value { font-size:20px; font-weight:800; margin-top:4px; }
+  .fin-box-value.green { color:var(--success); }
+  .fin-box-value.red { color:var(--danger); }
+  .fin-box-value.blue { color:var(--accent-dark); }
+
+  /* PERFIL */
+  .perfil-card {
+    background:#fff; border:1px solid var(--border); border-radius:14px;
+    padding:32px; display:flex; gap:24px; align-items:center; margin-bottom:20px;
+  }
+  .perfil-avatar {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:800; color:#fff; flex-shrink:0;
+  }
+  .perfil-info { flex:1; }
+  .perfil-nome { font-size:20px; font-weight:800; }
+  .perfil-empresa { font-size:13px; color:var(--muted); margin-top:2px; font-family:var(--font-mono); }
+  .perfil-plano {
+    margin-top:10px; display:inline-block;
+    padding:4px 12px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.2);
+    border-radius:20px; font-size:12px; color:var(--accent-dark); font-weight:600;
+  }
+
+  @media(max-width:700px) {
+    .hero-grid { grid-template-columns:1fr 1fr; }
+    .topbar { padding:0 16px; }
+    .nav-tabs { padding:0 16px; overflow-x:auto; }
+    .main { padding:20px 12px; }
+    .fin-summary { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Digital<span>.</span>Pressure</div>
+    <div class="login-sub">// portal do cliente</div>
+    <div class="login-badge">
+      🔒 Acesso exclusivo para clientes DP
+    </div>
+    <label>E-mail</label>
+    <input type="email" id="login-email" placeholder="seu@empresa.com" autocomplete="email"/>
+    <label>Senha</label>
+    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()"/>
+    <button class="btn-primary" onclick="doLogin()">Entrar no portal</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Digital<span>.</span>Pressure</div>
+    <div class="topbar-right">
+      <div class="empresa-badge" id="top-empresa">Carregando...</div>
+      <div class="user-chip">
+        <div class="user-dot"></div>
+        <div class="user-email" id="top-email">—</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="tab active" onclick="showTab('overview', this)">Visão geral</div>
+    <div class="tab" onclick="showTab('reunioes', this)">Reuniões & Entregas</div>
+    <div class="tab" onclick="showTab('financeiro', this)">Financeiro</div>
+    <div class="tab" onclick="showTab('vagas', this)">Vagas RH</div>
+    <div class="tab" onclick="showTab('perfil', this)">Meu perfil</div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="section-overview">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="hero-label">Reuniões realizadas</div>
+          <div class="hero-value blue" id="ov-reunioes">—</div>
+          <div class="hero-sub">desde o início do contrato</div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-label">Próxima reunião</div>
+          <div class="hero-value" id="ov-proxima" style="font-size:16px;padding-top:6px">—</div>
+          <div class="hero-sub" id="ov-proxima-sub"></div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-label">Vagas abertas</div>
+          <div class="hero-value green" id="ov-vagas">—</div>
+          <div class="hero-sub">em andamento</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Últimas entregas</div>
+            <div class="card-sub">// atualizado em tempo real pelo time DP</div>
+          </div>
+        </div>
+        <div class="timeline" id="ov-timeline">
+          <div class="loading">Carregando entregas...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REUNIÕES -->
+    <div class="section" id="section-reunioes">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Reuniões & Entregas</div>
+            <div class="card-sub">// histórico completo do seu projeto</div>
+          </div>
+        </div>
+        <div id="reunioes-list">
+          <div class="loading">Carregando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCEIRO -->
+    <div class="section" id="section-financeiro">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Financeiro</div>
+            <div class="card-sub">// mensalidades e pagamentos</div>
+          </div>
+        </div>
+        <div class="fin-summary" id="fin-summary"></div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Vencimento</th></tr></thead>
+          <tbody id="fin-tbody"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VAGAS -->
+    <div class="section" id="section-vagas">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Vagas de RH</div>
+            <div class="card-sub">// processos seletivos em andamento</div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Vaga</th><th>Status</th><th>Abertura</th><th>Descrição</th></tr></thead>
+          <tbody id="vag-tbody"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="section" id="section-perfil">
+      <div class="perfil-card">
+        <div class="perfil-avatar" id="perf-avatar">DP</div>
+        <div class="perfil-info">
+          <div class="perfil-nome" id="perf-nome">Carregando...</div>
+          <div class="perfil-empresa" id="perf-empresa">—</div>
+          <div class="perfil-plano" id="perf-plano">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Informações da conta</div></div>
+        <table>
+          <tbody id="perf-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://chxlseszedcnmqqryusz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_E3bcyQOVd-6PMqCKJFOHOA_REujRmla';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let empresaData = null;
+
+// ── AUTH ──────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  document.getElementById('login-error').textContent = '';
+  if (!email || !pass) { document.getElementById('login-error').textContent = 'Preencha e-mail e senha.'; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { document.getElementById('login-error').textContent = 'E-mail ou senha inválidos.'; return; }
+  currentUser = data.user;
+  await initApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function checkSession() {
+  const { data } = await sb.auth.getSession();
+  if (data.session) { currentUser = data.session.user; await initApp(); }
+}
+
+async function initApp() {
+  // Buscar empresa do usuário
+  const { data: usuario } = await sb.from('usuarios')
+    .select('*, empresas(*)')
+    .eq('email', currentUser.email)
+    .single();
+
+  if (usuario?.empresas) {
+    empresaData = usuario.empresas;
+  } else {
+    // fallback: pega primeira empresa (demo)
+    const { data: emp } = await sb.from('empresas').select('*').limit(1).single();
+    empresaData = emp;
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('top-email').textContent = currentUser.email;
+  document.getElementById('top-empresa').textContent = empresaData?.nome || 'Empresa';
+
+  loadOverview();
+}
+
+// ── NAV ───────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'reunioes') loadReunioes();
+  if (name === 'financeiro') loadFinanceiro();
+  if (name === 'vagas') loadVagas();
+  if (name === 'perfil') loadPerfil();
+}
+
+// ── OVERVIEW ──────────────────────────────────────────
+async function loadOverview() {
+  if (!empresaData) return;
+  const id = empresaData.id;
+
+  const [{ data: reunioes }, { data: vagas }] = await Promise.all([
+    sb.from('reunioes').select('*').eq('empresa_id', id).order('data_reuniao', { ascending: false }),
+    sb.from('vagas').select('*').eq('empresa_id', id).eq('status', 'aberta')
+  ]);
+
+  const realizadas = (reunioes||[]).filter(r => r.status === 'realizada');
+  const proxima = (reunioes||[]).filter(r => r.status === 'agendada' && r.data_reuniao)
+    .sort((a,b) => new Date(a.data_reuniao) - new Date(b.data_reuniao))[0];
+
+  document.getElementById('ov-reunioes').textContent = realizadas.length;
+  document.getElementById('ov-vagas').textContent = (vagas||[]).length;
+
+  if (proxima) {
+    const d = new Date(proxima.data_reuniao);
+    document.getElementById('ov-proxima').textContent = proxima.titulo;
+    document.getElementById('ov-proxima-sub').textContent = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+  } else {
+    document.getElementById('ov-proxima').textContent = 'Nenhuma agendada';
+  }
+
+  // Timeline
+  const tl = document.getElementById('ov-timeline');
+  const recentes = (reunioes||[]).slice(0, 6);
+  if (!recentes.length) {
+    tl.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Nenhuma entrega registrada ainda</div></div>';
+    return;
+  }
+  tl.innerHTML = recentes.map(r => `
+    <div class="tl-item">
+      <div class="tl-dot ${r.status}"></div>
+      <div class="tl-content">
+        <div class="tl-title">${r.titulo}</div>
+        <div class="tl-date">${r.data_reuniao ? new Date(r.data_reuniao).toLocaleDateString('pt-BR', {day:'2-digit',month:'long',year:'numeric'}) : '—'} · <span class="badge badge-${r.status}" style="font-size:10px">${r.status}</span></div>
+        ${r.entregaveis ? `<div class="tl-entregaveis">${r.entregaveis}</div>` : ''}
+        ${r.link_gravacao ? `<a class="btn-link" href="${r.link_gravacao}" target="_blank">▶ Ver gravação</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ── REUNIÕES ──────────────────────────────────────────
+async function loadReunioes() {
+  if (!empresaData) return;
+  const { data } = await sb.from('reunioes').select('*')
+    .eq('empresa_id', empresaData.id).order('data_reuniao', { ascending: false });
+
+  const el = document.getElementById('reunioes-list');
+  if (!(data||[]).length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Nenhuma reunião registrada ainda</div></div>';
+    return;
+  }
+  el.innerHTML = data.map(r => {
+    const d = r.data_reuniao ? new Date(r.data_reuniao) : null;
+    return `
+    <div class="reuniao-item">
+      <div class="reuniao-date">
+        <div class="reuniao-day">${d ? d.getDate() : '—'}</div>
+        <div class="reuniao-month">${d ? d.toLocaleDateString('pt-BR',{month:'short'}) : ''}</div>
+      </div>
+      <div class="reuniao-body">
+        <div class="reuniao-title">${r.titulo}</div>
+        ${r.descricao ? `<div class="reuniao-desc">${r.descricao}</div>` : ''}
+        <div class="reuniao-footer">
+          <span class="badge badge-${r.status}">${r.status}</span>
+          ${d ? `<span class="td-mono">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>` : ''}
+          ${r.link_gravacao ? `<a class="btn-link" href="${r.link_gravacao}" target="_blank">▶ Gravação</a>` : ''}
+        </div>
+        ${r.entregaveis ? `<div class="tl-entregaveis" style="margin-top:10px">${r.entregaveis}</div>` : ''}
+      </div>
+    </div>`}).join('');
+}
+
+// ── FINANCEIRO ────────────────────────────────────────
+async function loadFinanceiro() {
+  if (!empresaData) return;
+  const { data } = await sb.from('financeiro').select('*')
+    .eq('empresa_id', empresaData.id).order('criado_em', { ascending: false });
+
+  const items = data || [];
+  const entradas = items.filter(f => f.tipo === 'entrada').reduce((s,f) => s+f.valor, 0);
+  const saidas = items.filter(f => f.tipo === 'saida').reduce((s,f) => s+f.valor, 0);
+  const pendente = items.filter(f => f.status === 'pendente').reduce((s,f) => s+f.valor, 0);
+
+  document.getElementById('fin-summary').innerHTML = `
+    <div class="fin-box"><div class="fin-box-label">Entradas</div><div class="fin-box-value green">R$ ${entradas.toLocaleString('pt-BR')}</div></div>
+    <div class="fin-box"><div class="fin-box-label">Saídas</div><div class="fin-box-value red">R$ ${saidas.toLocaleString('pt-BR')}</div></div>
+    <div class="fin-box"><div class="fin-box-label">Pendente</div><div class="fin-box-value blue">R$ ${pendente.toLocaleString('pt-BR')}</div></div>`;
+
+  const tbody = document.getElementById('fin-tbody');
+  tbody.innerHTML = items.length ? items.map(f => `
+    <tr>
+      <td class="td-main">${f.descricao}</td>
+      <td><span class="badge badge-${f.tipo === 'entrada' ? 'ativo' : 'perdido'}">${f.tipo}</span></td>
+      <td style="font-weight:600;color:${f.tipo==='entrada'?'var(--success)':'var(--danger)'};font-family:var(--font-mono)">R$ ${(f.valor||0).toLocaleString('pt-BR')}</td>
+      <td><span class="badge badge-${f.status}">${f.status}</span></td>
+      <td class="td-mono">${f.vencimento || '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="loading">Nenhum lançamento ainda</td></tr>';
+}
+
+// ── VAGAS ─────────────────────────────────────────────
+async function loadVagas() {
+  if (!empresaData) return;
+  const { data } = await sb.from('vagas').select('*')
+    .eq('empresa_id', empresaData.id).order('criado_em', { ascending: false });
+
+  const tbody = document.getElementById('vag-tbody');
+  tbody.innerHTML = (data||[]).length ? data.map(v => `
+    <tr>
+      <td class="td-main">${v.titulo}</td>
+      <td><span class="badge badge-${v.status}">${v.status}</span></td>
+      <td class="td-mono">${new Date(v.criado_em).toLocaleDateString('pt-BR')}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:280px">${v.descricao || '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">💼</div><div class="empty-text">Nenhuma vaga cadastrada</div></div></td></tr>';
+}
+
+// ── PERFIL ────────────────────────────────────────────
+async function loadPerfil() {
+  if (!empresaData) return;
+  const initials = empresaData.nome?.slice(0,2).toUpperCase() || 'DP';
+  document.getElementById('perf-avatar').textContent = initials;
+  document.getElementById('perf-nome').textContent = empresaData.nome;
+  document.getElementById('perf-empresa').textContent = currentUser.email;
+  document.getElementById('perf-plano').textContent = (empresaData.plano || '').replace('_',' ');
+
+  document.getElementById('perf-tbody').innerHTML = `
+    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px;width:160px">Nome da empresa</td><td style="padding:14px 18px;font-weight:600">${empresaData.nome}</td></tr>
+    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">Plano contratado</td><td style="padding:14px 18px;font-weight:600">${(empresaData.plano||'').replace('_',' ')}</td></tr>
+    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">E-mail admin</td><td style="padding:14px 18px;font-family:var(--font-mono);font-size:13px">${empresaData.email_admin}</td></tr>
+    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">Cliente desde</td><td style="padding:14px 18px;font-family:var(--font-mono);font-size:13px">${new Date(empresaData.criado_em).toLocaleDateString('pt-BR')}</td></tr>
+  `;
+}
+
+// ── UTILS ─────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+checkSession();
+</script>
+</body>
+</html>
