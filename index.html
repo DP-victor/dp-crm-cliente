@@ -1,645 +1,366 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DP — Portal do Cliente</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Pressure — Portal do Cliente</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root {
-    --bg: #f5f6fa;
-    --bg2: #ffffff;
-    --bg3: #eef0f6;
-    --border: rgba(0,0,0,0.07);
-    --border2: rgba(0,0,0,0.12);
-    --text: #0d1117;
-    --muted: #6b7280;
-    --accent: #89c4f4;
-    --accent-dark: #1a7fd4;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --success: #10b981;
-    --info: #3b82f6;
-    --font-display: 'Syne', sans-serif;
-    --font-mono: 'DM Mono', monospace;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:var(--font-display); min-height:100vh; }
-
-  /* LOGIN */
-  #login-screen {
-    min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at 30% 40%, rgba(137,196,244,0.15) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.08) 0%, transparent 50%),
-                #f0f4ff;
-  }
-  .login-box {
-    width:400px; padding:48px 40px;
-    background:#fff; border:1px solid var(--border2);
-    border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,0.08);
-  }
-  .login-logo {
-    font-size:26px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;
-    color:var(--text);
-  }
-  .login-logo span { color:var(--accent-dark); }
-  .login-sub { font-size:13px; color:var(--muted); margin-bottom:36px; font-family:var(--font-mono); }
-  .login-box label { display:block; font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
-  .login-box input {
-    width:100%; padding:12px 14px; background:var(--bg3); border:1px solid var(--border2);
-    border-radius:10px; color:var(--text); font-family:var(--font-mono); font-size:14px;
-    margin-bottom:16px; outline:none; transition:border .2s;
-  }
-  .login-box input:focus { border-color:var(--accent-dark); }
-  .btn-primary {
-    width:100%; padding:14px; background:var(--accent-dark); color:#fff;
-    border:none; border-radius:10px; font-family:var(--font-display); font-size:14px;
-    font-weight:700; cursor:pointer; transition:all .2s; margin-top:4px;
-  }
-  .btn-primary:hover { background:#1565b8; transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,127,212,0.3); }
-  .login-error { font-size:12px; color:var(--danger); margin-top:12px; text-align:center; font-family:var(--font-mono); }
-  .login-badge {
-    display:flex; align-items:center; gap:8px; margin-bottom:28px;
-    padding:10px 14px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.15);
-    border-radius:8px; font-size:12px; color:var(--accent-dark); font-family:var(--font-mono);
-  }
-
-  /* APP */
-  #app { display:none; }
-
-  /* TOPBAR */
-  .topbar {
-    position:sticky; top:0; z-index:100;
-    background:#fff; border-bottom:1px solid var(--border);
-    padding:0 32px; height:60px;
-    display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 1px 8px rgba(0,0,0,0.04);
-  }
-  .topbar-logo { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
-  .topbar-logo span { color:var(--accent-dark); }
-  .topbar-right { display:flex; align-items:center; gap:16px; }
-  .empresa-badge {
-    padding:6px 14px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.2);
-    border-radius:20px; font-size:12px; font-weight:600; color:var(--accent-dark);
-  }
-  .user-chip {
-    display:flex; align-items:center; gap:8px;
-    padding:6px 12px; background:var(--bg3); border-radius:20px;
-  }
-  .user-dot { width:8px; height:8px; border-radius:50%; background:var(--success); }
-  .user-email { font-size:12px; color:var(--muted); font-family:var(--font-mono); }
-  .btn-logout { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:6px 10px; border-radius:6px; }
-  .btn-logout:hover { background:var(--bg3); color:var(--danger); }
-
-  /* NAV TABS */
-  .nav-tabs {
-    background:#fff; border-bottom:1px solid var(--border);
-    padding:0 32px; display:flex; gap:4px;
-  }
-  .tab {
-    padding:14px 20px; font-size:13px; font-weight:600; color:var(--muted);
-    cursor:pointer; border-bottom:2px solid transparent; transition:all .15s;
-    white-space:nowrap;
-  }
-  .tab:hover { color:var(--text); }
-  .tab.active { color:var(--accent-dark); border-bottom-color:var(--accent-dark); }
-
-  /* MAIN */
-  .main { max-width:1100px; margin:0 auto; padding:32px 24px; }
-
-  /* SECTION */
-  .section { display:none; }
-  .section.active { display:block; }
-
-  /* HERO CARDS */
-  .hero-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
-  .hero-card {
-    background:#fff; border:1px solid var(--border); border-radius:14px;
-    padding:22px 24px; transition:box-shadow .2s;
-  }
-  .hero-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.07); }
-  .hero-label { font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
-  .hero-value { font-size:30px; font-weight:800; letter-spacing:-1px; color:var(--text); }
-  .hero-value.blue { color:var(--accent-dark); }
-  .hero-value.green { color:var(--success); }
-  .hero-value.amber { color:var(--warning); }
-  .hero-sub { font-size:12px; color:var(--muted); margin-top:4px; font-family:var(--font-mono); }
-
-  /* CARDS */
-  .card {
-    background:#fff; border:1px solid var(--border); border-radius:14px;
-    overflow:hidden; margin-bottom:20px;
-  }
-  .card-header {
-    padding:18px 22px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .card-title { font-size:15px; font-weight:700; }
-  .card-sub { font-size:12px; color:var(--muted); font-family:var(--font-mono); margin-top:2px; }
-
-  /* TABLE */
-  table { width:100%; border-collapse:collapse; }
-  thead th {
-    padding:11px 18px; text-align:left; font-size:11px; font-weight:600;
-    letter-spacing:.08em; color:var(--muted); text-transform:uppercase;
-    background:var(--bg3); border-bottom:1px solid var(--border);
-  }
-  tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
-  tbody tr:last-child { border-bottom:none; }
-  tbody tr:hover { background:#fafbff; }
-  tbody td { padding:13px 18px; font-size:13px; }
-  .td-main { font-weight:600; font-size:14px; }
-  .td-mono { font-family:var(--font-mono); font-size:12px; color:var(--muted); }
-
-  /* BADGES */
-  .badge {
-    display:inline-flex; align-items:center; gap:5px;
-    padding:3px 10px; border-radius:20px;
-    font-size:11px; font-weight:600; letter-spacing:.03em;
-  }
-  .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; }
-  .badge-agendada { background:#eff6ff; color:#2563eb; }
-  .badge-realizada { background:#f0fdf4; color:#16a34a; }
-  .badge-cancelada { background:#fef2f2; color:#dc2626; }
-  .badge-ativo { background:#f0fdf4; color:#16a34a; }
-  .badge-venda { background:#eff6ff; color:#2563eb; }
-  .badge-perdido { background:#fef2f2; color:#dc2626; }
-  .badge-quente { background:#fff7ed; color:#ea580c; }
-  .badge-morno { background:#fefce8; color:#ca8a04; }
-  .badge-frio { background:#eff6ff; color:#2563eb; }
-  .badge-pendente { background:#fefce8; color:#ca8a04; }
-  .badge-pago { background:#f0fdf4; color:#16a34a; }
-  .badge-atrasado { background:#fef2f2; color:#dc2626; }
-  .badge-aberta { background:#f0fdf4; color:#16a34a; }
-  .badge-encerrada { background:#fef2f2; color:#dc2626; }
-
-  /* REUNIÃO CARD */
-  .reuniao-item {
-    padding:20px 22px; border-bottom:1px solid var(--border);
-    display:flex; gap:20px; align-items:flex-start;
-    transition:background .1s;
-  }
-  .reuniao-item:last-child { border-bottom:none; }
-  .reuniao-item:hover { background:#fafbff; }
-  .reuniao-date {
-    min-width:60px; text-align:center; padding:8px;
-    background:var(--bg3); border-radius:10px;
-  }
-  .reuniao-day { font-size:22px; font-weight:800; color:var(--accent-dark); line-height:1; }
-  .reuniao-month { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; margin-top:2px; }
-  .reuniao-body { flex:1; }
-  .reuniao-title { font-size:14px; font-weight:700; margin-bottom:4px; }
-  .reuniao-desc { font-size:12px; color:var(--muted); margin-bottom:8px; line-height:1.5; }
-  .reuniao-footer { display:flex; align-items:center; gap:10px; }
-  .btn-link {
-    font-size:12px; color:var(--accent-dark); font-weight:600;
-    text-decoration:none; display:inline-flex; align-items:center; gap:4px;
-  }
-  .btn-link:hover { text-decoration:underline; }
-
-  /* EMPTY */
-  .empty-state {
-    padding:60px 24px; text-align:center; color:var(--muted);
-  }
-  .empty-icon { font-size:36px; margin-bottom:12px; opacity:.4; }
-  .empty-text { font-size:14px; font-family:var(--font-mono); }
-
-  /* TIMELINE */
-  .timeline { padding:8px 0; }
-  .tl-item {
-    display:flex; gap:16px; padding:16px 22px;
-    border-bottom:1px solid var(--border);
-  }
-  .tl-item:last-child { border-bottom:none; }
-  .tl-dot {
-    width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0;
-  }
-  .tl-dot.realizada { background:var(--success); }
-  .tl-dot.agendada { background:var(--info); }
-  .tl-dot.cancelada { background:var(--danger); }
-  .tl-content { flex:1; }
-  .tl-title { font-size:13px; font-weight:600; }
-  .tl-date { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-top:2px; }
-  .tl-entregaveis {
-    margin-top:8px; padding:10px 14px; background:var(--bg3);
-    border-radius:8px; font-size:12px; color:var(--muted); line-height:1.6;
-    white-space:pre-wrap;
-  }
-
-  /* LOADING */
-  .loading { padding:40px; text-align:center; color:var(--muted); font-family:var(--font-mono); font-size:13px; }
-
-  /* TOAST */
-  .toast {
-    position:fixed; bottom:28px; right:28px; padding:14px 20px;
-    background:#fff; border:1px solid var(--border2); border-radius:10px;
-    font-size:13px; font-family:var(--font-mono); z-index:2000;
-    box-shadow:0 4px 20px rgba(0,0,0,0.1);
-    transform:translateY(80px); opacity:0; transition:all .3s;
-  }
-  .toast.show { transform:translateY(0); opacity:1; }
-  .toast.success { border-color:var(--success); color:var(--success); }
-  .toast.error { border-color:var(--danger); color:var(--danger); }
-
-  /* FINANCEIRO */
-  .fin-summary {
-    display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; padding:20px 22px;
-    border-bottom:1px solid var(--border);
-  }
-  .fin-box { text-align:center; padding:14px; background:var(--bg3); border-radius:10px; }
-  .fin-box-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
-  .fin-box-value { font-size:20px; font-weight:800; margin-top:4px; }
-  .fin-box-value.green { color:var(--success); }
-  .fin-box-value.red { color:var(--danger); }
-  .fin-box-value.blue { color:var(--accent-dark); }
-
-  /* PERFIL */
-  .perfil-card {
-    background:#fff; border:1px solid var(--border); border-radius:14px;
-    padding:32px; display:flex; gap:24px; align-items:center; margin-bottom:20px;
-  }
-  .perfil-avatar {
-    width:64px; height:64px; border-radius:50%;
-    background:linear-gradient(135deg, var(--accent), var(--accent-dark));
-    display:flex; align-items:center; justify-content:center;
-    font-size:24px; font-weight:800; color:#fff; flex-shrink:0;
-  }
-  .perfil-info { flex:1; }
-  .perfil-nome { font-size:20px; font-weight:800; }
-  .perfil-empresa { font-size:13px; color:var(--muted); margin-top:2px; font-family:var(--font-mono); }
-  .perfil-plano {
-    margin-top:10px; display:inline-block;
-    padding:4px 12px; background:#f0f7ff; border:1px solid rgba(26,127,212,0.2);
-    border-radius:20px; font-size:12px; color:var(--accent-dark); font-weight:600;
-  }
-
-  @media(max-width:700px) {
-    .hero-grid { grid-template-columns:1fr 1fr; }
-    .topbar { padding:0 16px; }
-    .nav-tabs { padding:0 16px; overflow-x:auto; }
-    .main { padding:20px 12px; }
-    .fin-summary { grid-template-columns:1fr; }
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070B0F;--surface:#0E1318;--surface2:#141B22;--border:#1E2830;
+  --cyan:#00D4FF;--cyan2:#00FFD1;--orange:#FF6B35;--green:#00E676;
+  --red:#FF4757;--yellow:#FFD93D;--purple:#A78BFA;
+  --text:#E8EDF2;--text2:#7A8A99;--text3:#3A4A58;
+}
+html{font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:'Lato',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+#login-screen{position:fixed;inset:0;background:#070B0F;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-wrap{width:360px;background:#0E1318;border:1px solid #1E2830;border-radius:12px;padding:40px 36px}
+.login-mark{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:#3A4A58;margin-bottom:4px}
+.login-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+.login-name span{color:#00D4FF}
+.login-sub{font-family:'DM Mono',monospace;font-size:10px;color:#3A4A58;letter-spacing:2px;margin-bottom:28px}
+.login-lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#7A8A99;text-transform:uppercase;margin-bottom:6px;display:block}
+.login-inp{width:100%;background:#141B22;border:1px solid #1E2830;border-radius:4px;padding:11px 13px;color:#E8EDF2;font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;margin-bottom:16px}
+.login-inp:focus{border-color:#00D4FF}
+.login-btn{width:100%;padding:12px;background:#00D4FF;color:#000;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:4px;transition:background .2s}
+.login-btn:hover{background:#00FFD1}
+.login-err{font-family:'DM Mono',monospace;font-size:11px;color:#FF4757;margin-top:10px;text-align:center;min-height:16px}
+.shell{display:none;grid-template-columns:220px 1fr;min-height:100vh;position:relative;z-index:1}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{padding:0 22px 24px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--text3);margin-bottom:4px}
+.logo-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800}
+.logo-name span{color:var(--cyan)}
+.logo-client{font-family:'DM Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:2px;margin-top:5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{padding:16px 0;flex:1}
+.nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;padding:0 22px;margin:14px 0 6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 22px;cursor:pointer;transition:all .2s;border-left:2px solid transparent;font-size:13px;color:var(--text2)}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--cyan);border-left-color:var(--cyan);background:rgba(0,212,255,.06)}
+.nav-item .ic{font-size:13px;width:16px;text-align:center}
+.sidebar-footer{padding:16px 22px;border-top:1px solid var(--border)}
+.user-badge{display:flex;align-items:center;gap:10px}
+.u-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--cyan2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#000;flex-shrink:0}
+.u-name{font-weight:700;font-size:12px}
+.u-role{color:var(--text2);font-size:10px;font-family:'DM Mono',monospace}
+.main{display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
+.page-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:800}
+.page-sub{font-size:11px;color:var(--text2);margin-top:1px;font-family:'DM Mono',monospace}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+.live-badge{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;color:var(--green)}
+.content{padding:22px 28px;flex:1}
+.view{display:none}.view.active{display:block}
+.kpi-grid{display:grid;gap:12px;margin-bottom:20px}
+.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden;transition:all .25s;animation:fadeUp .4s ease both}
+.kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent-color,var(--cyan))}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.kpi-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:8px}
+.kpi-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent-color,var(--cyan));line-height:1;margin-bottom:3px}
+.kpi-sub{font-size:11px;color:var(--text2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:14px;animation:fadeUp .4s ease both}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.card-badge{font-family:'DM Mono',monospace;font-size:10px;color:var(--cyan);background:rgba(0,212,255,.1);padding:3px 9px;border-radius:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse}
+table.tbl th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border);text-align:left}
+table.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);vertical-align:middle}
+table.tbl tr:hover td{background:rgba(0,212,255,.02)}
+table.tbl tr:last-child td{border-bottom:none}
+.td-bold{color:var(--text)!important;font-weight:700}
+.sb{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-family:'DM Mono',monospace;font-size:10px}
+.sb-v{background:rgba(0,230,118,.12);color:var(--green)}
+.sb-p{background:rgba(255,71,87,.12);color:var(--red)}
+.sb-a{background:rgba(0,212,255,.1);color:var(--cyan)}
+.sb-ag{background:rgba(255,217,61,.1);color:var(--yellow)}
+.fin-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)}
+.fin-row:last-child{border:none}
+.fin-lbl{font-size:13px;color:var(--text2)}
+.fin-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.fin-val.pos{color:var(--green)}.fin-val.neg{color:var(--red)}.fin-val.warn{color:var(--yellow)}
+.reu-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;border-left:3px solid var(--cyan)}
+.reu-item.realizada{border-left-color:var(--green)}
+.reu-item.cancelada{border-left-color:var(--red)}
+.reu-item.agendada{border-left-color:var(--yellow)}
+.reu-num{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:4px}
+.reu-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
+.reu-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+.reu-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.reu-tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:10px;background:rgba(0,212,255,.1);color:var(--cyan)}
+.reu-link{font-family:'DM Mono',monospace;font-size:10px;color:var(--cyan);text-decoration:none;padding:3px 8px;border:1px solid rgba(0,212,255,.3);border-radius:10px}
+.reu-link:hover{background:rgba(0,212,255,.1)}
+.vaga-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;border-left:3px solid var(--purple)}
+.vaga-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--green);border-radius:8px;padding:12px 18px;font-family:'DM Mono',monospace;font-size:12px;color:var(--green);z-index:300;transform:translateY(70px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">Digital<span>.</span>Pressure</div>
-    <div class="login-sub">// portal do cliente</div>
-    <div class="login-badge">
-      🔒 Acesso exclusivo para clientes DP
-    </div>
-    <label>E-mail</label>
-    <input type="email" id="login-email" placeholder="seu@empresa.com" autocomplete="email"/>
-    <label>Senha</label>
-    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter') doLogin()"/>
-    <button class="btn-primary" onclick="doLogin()">Entrar no portal</button>
-    <div class="login-error" id="login-error"></div>
+  <div class="login-wrap">
+    <div class="login-mark">PORTAL · 2026</div>
+    <div class="login-name">Digital<span>Pressure</span></div>
+    <div class="login-sub">ACESSO EXCLUSIVO CLIENTES</div>
+    <label class="login-lbl">E-mail</label>
+    <input class="login-inp" type="email" id="l-email" placeholder="seu@empresa.com" autocomplete="email"/>
+    <label class="login-lbl">Senha</label>
+    <input class="login-inp" type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">ENTRAR NO PORTAL</button>
+    <div class="login-err" id="l-err"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-logo">Digital<span>.</span>Pressure</div>
-    <div class="topbar-right">
-      <div class="empresa-badge" id="top-empresa">Carregando...</div>
-      <div class="user-chip">
-        <div class="user-dot"></div>
-        <div class="user-email" id="top-email">—</div>
-      </div>
-      <button class="btn-logout" onclick="doLogout()">Sair</button>
+<div class="shell" id="shell">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">PORTAL · 2026</div>
+    <div class="logo-name">Digital<span>Pressure</span></div>
+    <div class="logo-client" id="logo-client">carregando...</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Meu Projeto</div>
+    <div class="nav-item active" onclick="nav('overview',this)"><span class="ic">◈</span>Visão Geral</div>
+    <div class="nav-item" onclick="nav('reunioes',this)"><span class="ic">◷</span>Reuniões & Entregas</div>
+    <div class="nav-label">Gestão</div>
+    <div class="nav-item" onclick="nav('financeiro',this)"><span class="ic">◎</span>Financeiro</div>
+    <div class="nav-item" onclick="nav('vagas',this)"><span class="ic">◑</span>Vagas RH</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-badge">
+      <div class="u-av" id="u-av">DP</div>
+      <div><div class="u-name" id="u-name">—</div><div class="u-role">cliente ativo</div></div>
+      <button onclick="doLogout()" style="background:none;border:none;color:#3A4A58;cursor:pointer;font-size:16px;margin-left:auto;padding:4px" title="Sair">⏻</button>
     </div>
   </div>
+</aside>
 
-  <div class="nav-tabs">
-    <div class="tab active" onclick="showTab('overview', this)">Visão geral</div>
-    <div class="tab" onclick="showTab('reunioes', this)">Reuniões & Entregas</div>
-    <div class="tab" onclick="showTab('financeiro', this)">Financeiro</div>
-    <div class="tab" onclick="showTab('vagas', this)">Vagas RH</div>
-    <div class="tab" onclick="showTab('perfil', this)">Meu perfil</div>
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Visão Geral</div>
+      <div class="page-sub">Portal do Cliente · <span id="nowTime"></span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+    </div>
   </div>
-
-  <div class="main">
+  <div class="content">
 
     <!-- OVERVIEW -->
-    <div class="section active" id="section-overview">
-      <div class="hero-grid">
-        <div class="hero-card">
-          <div class="hero-label">Reuniões realizadas</div>
-          <div class="hero-value blue" id="ov-reunioes">—</div>
-          <div class="hero-sub">desde o início do contrato</div>
-        </div>
-        <div class="hero-card">
-          <div class="hero-label">Próxima reunião</div>
-          <div class="hero-value" id="ov-proxima" style="font-size:16px;padding-top:6px">—</div>
-          <div class="hero-sub" id="ov-proxima-sub"></div>
-        </div>
-        <div class="hero-card">
-          <div class="hero-label">Vagas abertas</div>
-          <div class="hero-value green" id="ov-vagas">—</div>
-          <div class="hero-sub">em andamento</div>
-        </div>
+    <div class="view active" id="view-overview">
+      <div class="kpi-grid g3" id="ov-kpis"></div>
+      <div class="grid2">
+        <div class="card"><div class="card-header"><div class="card-title">Próximas Reuniões</div><div class="card-badge" id="ov-badge">—</div></div><div id="ov-proximas"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Últimas Entregas</div></div><div id="ov-entregas"></div></div>
       </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Últimas entregas</div>
-            <div class="card-sub">// atualizado em tempo real pelo time DP</div>
-          </div>
-        </div>
-        <div class="timeline" id="ov-timeline">
-          <div class="loading">Carregando entregas...</div>
-        </div>
-      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Status do Projeto</div></div><div id="ov-status"></div></div>
     </div>
 
     <!-- REUNIÕES -->
-    <div class="section" id="section-reunioes">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Reuniões & Entregas</div>
-            <div class="card-sub">// histórico completo do seu projeto</div>
-          </div>
-        </div>
-        <div id="reunioes-list">
-          <div class="loading">Carregando...</div>
-        </div>
+    <div class="view" id="view-reunioes">
+      <div class="kpi-grid g3" id="reu-kpis"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="card-header" style="padding:14px 18px"><div class="card-title">Histórico Completo</div><div class="card-badge" id="reu-badge">0</div></div>
+        <div id="reu-lista" style="padding:14px 18px"></div>
       </div>
     </div>
 
     <!-- FINANCEIRO -->
-    <div class="section" id="section-financeiro">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Financeiro</div>
-            <div class="card-sub">// mensalidades e pagamentos</div>
-          </div>
+    <div class="view" id="view-financeiro">
+      <div class="kpi-grid g3" id="fin-kpis"></div>
+      <div class="grid2">
+        <div class="card"><div class="card-header"><div class="card-title">📊 Resumo</div></div><div id="fin-resumo"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">📋 Lançamentos</div></div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Venc.</th></tr></thead><tbody id="fin-tbody"></tbody></table></div>
         </div>
-        <div class="fin-summary" id="fin-summary"></div>
-        <table>
-          <thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Vencimento</th></tr></thead>
-          <tbody id="fin-tbody"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody>
-        </table>
       </div>
     </div>
 
     <!-- VAGAS -->
-    <div class="section" id="section-vagas">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Vagas de RH</div>
-            <div class="card-sub">// processos seletivos em andamento</div>
-          </div>
-        </div>
-        <table>
-          <thead><tr><th>Vaga</th><th>Status</th><th>Abertura</th><th>Descrição</th></tr></thead>
-          <tbody id="vag-tbody"><tr><td colspan="4" class="loading">Carregando...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PERFIL -->
-    <div class="section" id="section-perfil">
-      <div class="perfil-card">
-        <div class="perfil-avatar" id="perf-avatar">DP</div>
-        <div class="perfil-info">
-          <div class="perfil-nome" id="perf-nome">Carregando...</div>
-          <div class="perfil-empresa" id="perf-empresa">—</div>
-          <div class="perfil-plano" id="perf-plano">—</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Informações da conta</div></div>
-        <table>
-          <tbody id="perf-tbody"></tbody>
-        </table>
-      </div>
+    <div class="view" id="view-vagas">
+      <div class="kpi-grid g3" id="vag-kpis"></div>
+      <div id="vag-lista"></div>
     </div>
 
   </div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://chxlseszedcnmqqryusz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_E3bcyQOVd-6PMqCKJFOHOA_REujRmla';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const {createClient}=supabase;
+const sb=createClient('https://chxlseszedcnmqqryusz.supabase.co','sb_publishable_E3bcyQOVd-6PMqCKJFOHOA_REujRmla');
+let empresaData=null;
+const fmt=n=>Math.round(n).toLocaleString('pt-BR');
 
-let currentUser = null;
-let empresaData = null;
+async function doLogin(){
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  document.getElementById('l-err').textContent='';
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){document.getElementById('l-err').textContent='E-mail ou senha inválidos.';return;}
+  await initApp(data.user);
+}
+async function doLogout(){await sb.auth.signOut();location.reload();}
+async function checkSession(){const {data}=await sb.auth.getSession();if(data.session)await initApp(data.session.user);}
 
-// ── AUTH ──────────────────────────────────────────────
-async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
-  document.getElementById('login-error').textContent = '';
-  if (!email || !pass) { document.getElementById('login-error').textContent = 'Preencha e-mail e senha.'; return; }
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) { document.getElementById('login-error').textContent = 'E-mail ou senha inválidos.'; return; }
-  currentUser = data.user;
-  await initApp();
+async function initApp(user){
+  const {data:u}=await sb.from('usuarios').select('*,empresas(*)').eq('email',user.email).single();
+  empresaData=u?.empresas||null;
+  if(!empresaData){const {data:e}=await sb.from('empresas').select('*').limit(1).single();empresaData=e;}
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('shell').style.display='grid';
+  const em=user.email||'';
+  document.getElementById('u-av').textContent=em.slice(0,2).toUpperCase();
+  document.getElementById('u-name').textContent=em.split('@')[0];
+  document.getElementById('logo-client').textContent=empresaData?.nome||'—';
+  renderAll();
 }
 
-async function doLogout() {
-  await sb.auth.signOut();
-  location.reload();
+const viewTitles={overview:'Visão Geral',reunioes:'Reuniões & Entregas',financeiro:'Financeiro',vagas:'Vagas RH'};
+function nav(name,el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').textContent=viewTitles[name]||name;
 }
 
-async function checkSession() {
-  const { data } = await sb.auth.getSession();
-  if (data.session) { currentUser = data.session.user; await initApp(); }
-}
-
-async function initApp() {
-  // Buscar empresa do usuário
-  const { data: usuario } = await sb.from('usuarios')
-    .select('*, empresas(*)')
-    .eq('email', currentUser.email)
-    .single();
-
-  if (usuario?.empresas) {
-    empresaData = usuario.empresas;
-  } else {
-    // fallback: pega primeira empresa (demo)
-    const { data: emp } = await sb.from('empresas').select('*').limit(1).single();
-    empresaData = emp;
-  }
-
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('top-email').textContent = currentUser.email;
-  document.getElementById('top-empresa').textContent = empresaData?.nome || 'Empresa';
-
-  loadOverview();
-}
-
-// ── NAV ───────────────────────────────────────────────
-function showTab(name, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
-  el.classList.add('active');
-  if (name === 'reunioes') loadReunioes();
-  if (name === 'financeiro') loadFinanceiro();
-  if (name === 'vagas') loadVagas();
-  if (name === 'perfil') loadPerfil();
-}
-
-// ── OVERVIEW ──────────────────────────────────────────
-async function loadOverview() {
-  if (!empresaData) return;
-  const id = empresaData.id;
-
-  const [{ data: reunioes }, { data: vagas }] = await Promise.all([
-    sb.from('reunioes').select('*').eq('empresa_id', id).order('data_reuniao', { ascending: false }),
-    sb.from('vagas').select('*').eq('empresa_id', id).eq('status', 'aberta')
+async function renderOverview(){
+  if(!empresaData)return;
+  const id=empresaData.id;
+  const [{data:reus},{data:vagas},{data:fin}]=await Promise.all([
+    sb.from('reunioes').select('*').eq('empresa_id',id).order('data_reuniao',{ascending:false}),
+    sb.from('vagas').select('*').eq('empresa_id',id),
+    sb.from('financeiro').select('*').eq('empresa_id',id)
   ]);
-
-  const realizadas = (reunioes||[]).filter(r => r.status === 'realizada');
-  const proxima = (reunioes||[]).filter(r => r.status === 'agendada' && r.data_reuniao)
-    .sort((a,b) => new Date(a.data_reuniao) - new Date(b.data_reuniao))[0];
-
-  document.getElementById('ov-reunioes').textContent = realizadas.length;
-  document.getElementById('ov-vagas').textContent = (vagas||[]).length;
-
-  if (proxima) {
-    const d = new Date(proxima.data_reuniao);
-    document.getElementById('ov-proxima').textContent = proxima.titulo;
-    document.getElementById('ov-proxima-sub').textContent = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
-  } else {
-    document.getElementById('ov-proxima').textContent = 'Nenhuma agendada';
-  }
-
-  // Timeline
-  const tl = document.getElementById('ov-timeline');
-  const recentes = (reunioes||[]).slice(0, 6);
-  if (!recentes.length) {
-    tl.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Nenhuma entrega registrada ainda</div></div>';
-    return;
-  }
-  tl.innerHTML = recentes.map(r => `
-    <div class="tl-item">
-      <div class="tl-dot ${r.status}"></div>
-      <div class="tl-content">
-        <div class="tl-title">${r.titulo}</div>
-        <div class="tl-date">${r.data_reuniao ? new Date(r.data_reuniao).toLocaleDateString('pt-BR', {day:'2-digit',month:'long',year:'numeric'}) : '—'} · <span class="badge badge-${r.status}" style="font-size:10px">${r.status}</span></div>
-        ${r.entregaveis ? `<div class="tl-entregaveis">${r.entregaveis}</div>` : ''}
-        ${r.link_gravacao ? `<a class="btn-link" href="${r.link_gravacao}" target="_blank">▶ Ver gravação</a>` : ''}
+  const realizadas=(reus||[]).filter(r=>r.status==='realizada');
+  const agendadas=(reus||[]).filter(r=>r.status==='agendada');
+  const abertas=(vagas||[]).filter(v=>v.status==='aberta');
+  const pendente=(fin||[]).filter(f=>f.status==='pendente').reduce((s,f)=>s+Number(f.valor),0);
+  document.getElementById('ov-kpis').innerHTML=[
+    {l:'Reuniões Realizadas',v:realizadas.length,sub:`${agendadas.length} agendadas`,a:'--cyan'},
+    {l:'Vagas Abertas',v:abertas.length,sub:'em andamento',a:'--green'},
+    {l:'Pendente Financeiro',v:'R$ '+fmt(pendente),sub:'a vencer',a:'--yellow'},
+  ].map((c,i)=>`<div class="kpi-card" style="--accent-color:var(${c.a});animation-delay:${i*.06}s"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div><div class="kpi-sub">${c.sub}</div></div>`).join('');
+  const proximas=agendadas.filter(r=>r.data_reuniao).sort((a,b)=>new Date(a.data_reuniao)-new Date(b.data_reuniao)).slice(0,3);
+  document.getElementById('ov-badge').textContent=proximas.length+' próximas';
+  document.getElementById('ov-proximas').innerHTML=proximas.length?proximas.map(r=>`
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:center;min-width:44px;flex-shrink:0">
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--cyan);line-height:1">${new Date(r.data_reuniao).getDate()}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)">${new Date(r.data_reuniao).toLocaleDateString('pt-BR',{month:'short'}).toUpperCase()}</div>
       </div>
-    </div>`).join('');
+      <div><div style="font-size:13px;font-weight:700;color:var(--text)">${r.titulo}</div>
+      <div style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:2px">${new Date(r.data_reuniao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>
+    </div>`).join(''):'<div style="color:var(--text2);font-size:12px;padding:8px 0">Nenhuma reunião agendada</div>';
+  const entregues=realizadas.slice(0,5);
+  document.getElementById('ov-entregas').innerHTML=entregues.length?entregues.map(r=>`
+    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--text)">${r.titulo}</div>
+      <div style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:2px">${r.data_reuniao?new Date(r.data_reuniao).toLocaleDateString('pt-BR'):'—'}</div>
+      ${r.entregaveis?`<div style="font-size:11px;color:var(--cyan);margin-top:4px;line-height:1.5">${r.entregaveis}</div>`:''}
+    </div>`).join(''):'<div style="color:var(--text2);font-size:12px;padding:8px 0">Nenhuma entrega ainda</div>';
+  const total=(reus||[]).length;
+  const pct=total>0?Math.round((realizadas.length/total)*100):0;
+  document.getElementById('ov-status').innerHTML=`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text2)">Progresso das reuniões</span><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cyan)">${realizadas.length}/${total}</span></div>
+      <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan2));width:${pct}%;border-radius:4px;transition:width .8s ease"></div></div>
+      <div style="text-align:right;font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);margin-top:4px">${pct}% concluído</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      ${[['Agendadas',agendadas.length,'var(--yellow)'],['Realizadas',realizadas.length,'var(--green)'],['Total Reus.',total,'var(--cyan)'],['Vagas',abertas.length,'var(--purple)']].map(([l,v,c])=>`
+        <div style="background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
+          <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:${c}">${v}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:3px">${l.toUpperCase()}</div>
+        </div>`).join('')}
+    </div>`;
 }
 
-// ── REUNIÕES ──────────────────────────────────────────
-async function loadReunioes() {
-  if (!empresaData) return;
-  const { data } = await sb.from('reunioes').select('*')
-    .eq('empresa_id', empresaData.id).order('data_reuniao', { ascending: false });
-
-  const el = document.getElementById('reunioes-list');
-  if (!(data||[]).length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">Nenhuma reunião registrada ainda</div></div>';
-    return;
-  }
-  el.innerHTML = data.map(r => {
-    const d = r.data_reuniao ? new Date(r.data_reuniao) : null;
-    return `
-    <div class="reuniao-item">
-      <div class="reuniao-date">
-        <div class="reuniao-day">${d ? d.getDate() : '—'}</div>
-        <div class="reuniao-month">${d ? d.toLocaleDateString('pt-BR',{month:'short'}) : ''}</div>
+async function renderReunioes(){
+  if(!empresaData)return;
+  const {data:reus}=await sb.from('reunioes').select('*').eq('empresa_id',empresaData.id).order('data_reuniao',{ascending:false});
+  const items=reus||[];
+  const realizadas=items.filter(r=>r.status==='realizada').length;
+  const agendadas=items.filter(r=>r.status==='agendada').length;
+  document.getElementById('reu-kpis').innerHTML=[
+    {l:'Total',v:items.length,a:'--cyan'},{l:'Realizadas',v:realizadas,a:'--green'},{l:'Agendadas',v:agendadas,a:'--yellow'}
+  ].map(c=>`<div class="kpi-card" style="--accent-color:var(${c.a})"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div>`).join('');
+  document.getElementById('reu-badge').textContent=items.length+' reuniões';
+  const sLabel={realizada:'✅ Realizada',agendada:'📅 Agendada',cancelada:'❌ Cancelada'};
+  document.getElementById('reu-lista').innerHTML=items.length?items.map(r=>`
+    <div class="reu-item ${r.status||''}">
+      <div class="reu-num">${r.data_reuniao?new Date(r.data_reuniao).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}):' — '}</div>
+      <div class="reu-title">${r.titulo}</div>
+      ${r.descricao?`<div class="reu-desc">${r.descricao}</div>`:''}
+      ${r.entregaveis?`<div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:6px;padding:10px 14px;margin-bottom:8px;font-size:12px;color:var(--text2);line-height:1.6"><span style="color:var(--cyan);font-family:'DM Mono',monospace;font-size:10px;display:block;margin-bottom:4px">ENTREGÁVEIS</span>${r.entregaveis}</div>`:''}
+      <div class="reu-meta">
+        <span class="reu-tag">${sLabel[r.status]||r.status}</span>
+        ${r.link_gravacao?`<a class="reu-link" href="${r.link_gravacao}" target="_blank">▶ Ver gravação</a>`:''}
       </div>
-      <div class="reuniao-body">
-        <div class="reuniao-title">${r.titulo}</div>
-        ${r.descricao ? `<div class="reuniao-desc">${r.descricao}</div>` : ''}
-        <div class="reuniao-footer">
-          <span class="badge badge-${r.status}">${r.status}</span>
-          ${d ? `<span class="td-mono">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>` : ''}
-          ${r.link_gravacao ? `<a class="btn-link" href="${r.link_gravacao}" target="_blank">▶ Gravação</a>` : ''}
-        </div>
-        ${r.entregaveis ? `<div class="tl-entregaveis" style="margin-top:10px">${r.entregaveis}</div>` : ''}
-      </div>
-    </div>`}).join('');
+    </div>`).join(''):'<div style="color:var(--text2);font-size:12px;padding:20px 0;text-align:center">Nenhuma reunião registrada ainda</div>';
 }
 
-// ── FINANCEIRO ────────────────────────────────────────
-async function loadFinanceiro() {
-  if (!empresaData) return;
-  const { data } = await sb.from('financeiro').select('*')
-    .eq('empresa_id', empresaData.id).order('criado_em', { ascending: false });
-
-  const items = data || [];
-  const entradas = items.filter(f => f.tipo === 'entrada').reduce((s,f) => s+f.valor, 0);
-  const saidas = items.filter(f => f.tipo === 'saida').reduce((s,f) => s+f.valor, 0);
-  const pendente = items.filter(f => f.status === 'pendente').reduce((s,f) => s+f.valor, 0);
-
-  document.getElementById('fin-summary').innerHTML = `
-    <div class="fin-box"><div class="fin-box-label">Entradas</div><div class="fin-box-value green">R$ ${entradas.toLocaleString('pt-BR')}</div></div>
-    <div class="fin-box"><div class="fin-box-label">Saídas</div><div class="fin-box-value red">R$ ${saidas.toLocaleString('pt-BR')}</div></div>
-    <div class="fin-box"><div class="fin-box-label">Pendente</div><div class="fin-box-value blue">R$ ${pendente.toLocaleString('pt-BR')}</div></div>`;
-
-  const tbody = document.getElementById('fin-tbody');
-  tbody.innerHTML = items.length ? items.map(f => `
+async function renderFinanceiro(){
+  if(!empresaData)return;
+  const {data:fin}=await sb.from('financeiro').select('*').eq('empresa_id',empresaData.id).order('criado_em',{ascending:false});
+  const items=fin||[];
+  const entradas=items.filter(f=>f.tipo==='entrada').reduce((s,f)=>s+Number(f.valor),0);
+  const saidas=items.filter(f=>f.tipo==='saida').reduce((s,f)=>s+Number(f.valor),0);
+  const pendente=items.filter(f=>f.status==='pendente').reduce((s,f)=>s+Number(f.valor),0);
+  document.getElementById('fin-kpis').innerHTML=[
+    {l:'Entradas',v:'R$ '+fmt(entradas),a:'--green'},{l:'Saídas',v:'R$ '+fmt(saidas),a:'--red'},{l:'Pendente',v:'R$ '+fmt(pendente),a:'--yellow'}
+  ].map(c=>`<div class="kpi-card" style="--accent-color:var(${c.a})"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div>`).join('');
+  document.getElementById('fin-resumo').innerHTML=[
+    ['Receitas totais','R$ '+fmt(entradas),'pos'],['Despesas totais','R$ '+fmt(saidas),'neg'],
+    ['Saldo','R$ '+fmt(entradas-saidas),(entradas-saidas)>=0?'pos':'neg'],['Pendente','R$ '+fmt(pendente),'warn'],
+  ].map(([l,v,c])=>`<div class="fin-row"><span class="fin-lbl">${l}</span><span class="fin-val ${c}">${v}</span></div>`).join('');
+  const sL={pendente:'⏳ Pendente',pago:'✅ Pago',atrasado:'❌ Atrasado'};
+  document.getElementById('fin-tbody').innerHTML=items.length?items.map(f=>`
     <tr>
-      <td class="td-main">${f.descricao}</td>
-      <td><span class="badge badge-${f.tipo === 'entrada' ? 'ativo' : 'perdido'}">${f.tipo}</span></td>
-      <td style="font-weight:600;color:${f.tipo==='entrada'?'var(--success)':'var(--danger)'};font-family:var(--font-mono)">R$ ${(f.valor||0).toLocaleString('pt-BR')}</td>
-      <td><span class="badge badge-${f.status}">${f.status}</span></td>
-      <td class="td-mono">${f.vencimento || '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="5" class="loading">Nenhum lançamento ainda</td></tr>';
+      <td class="td-bold">${f.descricao}</td>
+      <td><span class="sb ${f.tipo==='entrada'?'sb-v':'sb-p'}">${f.tipo}</span></td>
+      <td style="font-family:'DM Mono',monospace;color:${f.tipo==='entrada'?'var(--green)':'var(--red)'}">R$ ${fmt(f.valor)}</td>
+      <td><span class="sb ${f.status==='pago'?'sb-v':f.status==='atrasado'?'sb-p':'sb-ag'}">${sL[f.status]||f.status}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">${f.vencimento||'—'}</td>
+    </tr>`).join(''):'<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text2)">Nenhum lançamento ainda</td></tr>';
 }
 
-// ── VAGAS ─────────────────────────────────────────────
-async function loadVagas() {
-  if (!empresaData) return;
-  const { data } = await sb.from('vagas').select('*')
-    .eq('empresa_id', empresaData.id).order('criado_em', { ascending: false });
-
-  const tbody = document.getElementById('vag-tbody');
-  tbody.innerHTML = (data||[]).length ? data.map(v => `
-    <tr>
-      <td class="td-main">${v.titulo}</td>
-      <td><span class="badge badge-${v.status}">${v.status}</span></td>
-      <td class="td-mono">${new Date(v.criado_em).toLocaleDateString('pt-BR')}</td>
-      <td style="font-size:12px;color:var(--muted);max-width:280px">${v.descricao || '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">💼</div><div class="empty-text">Nenhuma vaga cadastrada</div></div></td></tr>';
+async function renderVagas(){
+  if(!empresaData)return;
+  const {data:vagas}=await sb.from('vagas').select('*').eq('empresa_id',empresaData.id).order('criado_em',{ascending:false});
+  const items=vagas||[];
+  const abertas=items.filter(v=>v.status==='aberta').length;
+  document.getElementById('vag-kpis').innerHTML=[
+    {l:'Total de Vagas',v:items.length,a:'--cyan'},{l:'Abertas',v:abertas,a:'--green'},{l:'Encerradas',v:items.filter(v=>v.status==='encerrada').length,a:'--red'}
+  ].map(c=>`<div class="kpi-card" style="--accent-color:var(${c.a})"><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div>`).join('');
+  document.getElementById('vag-lista').innerHTML=items.length?items.map(v=>`
+    <div class="vaga-card" style="${v.status==='encerrada'?'border-left-color:var(--red);opacity:.7':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="vaga-title">${v.titulo}</div>
+        <span class="sb ${v.status==='aberta'?'sb-v':v.status==='pausada'?'sb-ag':'sb-p'}">${v.status==='aberta'?'● Aberta':v.status==='pausada'?'⏸ Pausada':'✕ Encerrada'}</span>
+      </div>
+      ${v.descricao?`<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${v.descricao}</div>`:''}
+      ${v.requisitos?`<div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.15);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6"><span style="color:var(--purple);font-family:'DM Mono',monospace;font-size:10px;display:block;margin-bottom:4px">REQUISITOS</span>${v.requisitos}</div>`:''}
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:8px">Abertura: ${new Date(v.criado_em).toLocaleDateString('pt-BR')}</div>
+    </div>`).join(''):'<div style="color:var(--text2);font-size:13px;padding:20px 0;text-align:center">Nenhuma vaga cadastrada</div>';
 }
 
-// ── PERFIL ────────────────────────────────────────────
-async function loadPerfil() {
-  if (!empresaData) return;
-  const initials = empresaData.nome?.slice(0,2).toUpperCase() || 'DP';
-  document.getElementById('perf-avatar').textContent = initials;
-  document.getElementById('perf-nome').textContent = empresaData.nome;
-  document.getElementById('perf-empresa').textContent = currentUser.email;
-  document.getElementById('perf-plano').textContent = (empresaData.plano || '').replace('_',' ');
-
-  document.getElementById('perf-tbody').innerHTML = `
-    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px;width:160px">Nome da empresa</td><td style="padding:14px 18px;font-weight:600">${empresaData.nome}</td></tr>
-    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">Plano contratado</td><td style="padding:14px 18px;font-weight:600">${(empresaData.plano||'').replace('_',' ')}</td></tr>
-    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">E-mail admin</td><td style="padding:14px 18px;font-family:var(--font-mono);font-size:13px">${empresaData.email_admin}</td></tr>
-    <tr><td style="padding:14px 18px;color:var(--muted);font-size:12px">Cliente desde</td><td style="padding:14px 18px;font-family:var(--font-mono);font-size:13px">${new Date(empresaData.criado_em).toLocaleDateString('pt-BR')}</td></tr>
-  `;
-}
-
-// ── UTILS ─────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
+async function renderAll(){await renderOverview();renderReunioes();renderFinanceiro();renderVagas();}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+setInterval(()=>{const el=document.getElementById('nowTime');if(el)el.textContent=new Date().toLocaleString('pt-BR');},1000);
 checkSession();
 </script>
 </body>
