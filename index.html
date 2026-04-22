@@ -456,7 +456,7 @@ tr:last-child td{border-bottom:none}
         <div style="font-family:var(--f-title);font-size:15px;font-weight:700">Pipeline Visual</div>
         <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:2px">Mova leads com as setas ← →</div>
       </div>
-      <button class="btn btn-p btn-sm" onclick="openModal('m-lead')">+ Novo Lead</button>
+      <button class="btn btn-p btn-sm" onclick="openM('m-lead')">+ Novo Lead</button>
     </div>
     <div class="kb" id="kb-wrap"></div>
   </div>
@@ -467,7 +467,7 @@ tr:last-child td{border-bottom:none}
       <input class="si" id="l-srch" placeholder="🔍 Buscar por nome ou origem..." oninput="renderLeads()"/>
       <select class="ssi" id="l-fst" onchange="renderLeads()"><option value="">Todos status</option><option value="ativo">Ativo</option><option value="venda">Venda</option><option value="perdido">Perdido</option></select>
       <select class="ssi" id="l-ftp" onchange="renderLeads()"><option value="">Temperatura</option><option value="quente">🔥 Quente</option><option value="morno">🌡 Morno</option><option value="frio">❄ Frio</option></select>
-      <button class="btn btn-p btn-sm" onclick="openModal('m-lead')">+ Lead</button>
+      <button class="btn btn-p btn-sm" onclick="openM('m-lead')">+ Lead</button>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="card-h" style="padding:14px 18px">
@@ -515,7 +515,7 @@ tr:last-child td{border-bottom:none}
     <!-- CUSTOS FIXOS -->
     <div class="vp" id="fp-cf">
       <div class="card">
-        <div class="card-h"><div class="card-t">💰 Custos Fixos Mensais</div><button class="btn btn-p btn-sm" onclick="openModal('m-cf')">+ Custo Fixo</button></div>
+        <div class="card-h"><div class="card-t">💰 Custos Fixos Mensais</div><button class="btn btn-p btn-sm" onclick="openM('m-cf')">+ Custo Fixo</button></div>
         <div id="cf-lista"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--b1);margin-top:8px">
           <span style="font-family:var(--f-mono);font-size:11px;color:var(--t2)">TOTAL MENSAL</span>
@@ -526,7 +526,7 @@ tr:last-child td{border-bottom:none}
     <!-- CUSTOS VARIÁVEIS -->
     <div class="vp" id="fp-cv">
       <div class="card">
-        <div class="card-h"><div class="card-t">📉 Custos Variáveis</div><button class="btn btn-p btn-sm" onclick="openModal('m-cv')">+ Custo Variável</button></div>
+        <div class="card-h"><div class="card-t">📉 Custos Variáveis</div><button class="btn btn-p btn-sm" onclick="openM('m-cv')">+ Custo Variável</button></div>
         <div class="tw"><table><thead><tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Valor R$</th><th>Lead</th><th></th></tr></thead><tbody id="cv-body"></tbody></table></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--b1);margin-top:8px">
           <span style="font-family:var(--f-mono);font-size:11px;color:var(--t2)">TOTAL NO PERÍODO</span>
@@ -551,7 +551,7 @@ tr:last-child td{border-bottom:none}
     <!-- ENTRADAS -->
     <div class="vp" id="fp-entradas">
       <div class="card">
-        <div class="card-h"><div class="card-t">📥 Recebíveis Detalhados</div><button class="btn btn-p btn-sm" onclick="openModal('m-entrada')">+ Entrada</button></div>
+        <div class="card-h"><div class="card-t">📥 Recebíveis Detalhados</div><button class="btn btn-p btn-sm" onclick="openM('m-entrada')">+ Entrada</button></div>
         <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Parcelas e datas geradas automaticamente ao fechar venda + entradas manuais</div>
         <div class="tw"><table><thead><tr><th>Descrição / Lead</th><th>Forma</th><th>Parcela</th><th>Vencimento</th><th>Valor Líq.</th><th>Status</th><th></th></tr></thead><tbody id="en-body"></tbody></table></div>
       </div>
@@ -559,7 +559,7 @@ tr:last-child td{border-bottom:none}
     <!-- CUSTO DE ENTREGA -->
     <div class="vp" id="fp-ce">
       <div class="card">
-        <div class="card-h"><div class="card-t">⏱ Custo de Entrega por Cliente</div><button class="btn btn-p btn-sm" onclick="openModal('m-ce')">+ Lançar Horas</button></div>
+        <div class="card-h"><div class="card-t">⏱ Custo de Entrega por Cliente</div><button class="btn btn-p btn-sm" onclick="openM('m-ce')">+ Lançar Horas</button></div>
         <div style="font-size:11px;color:var(--t2);margin-bottom:14px">Custo real de entrega, horas trabalhadas e margem por contrato fechado</div>
         <div id="ce-lista"></div>
       </div>
@@ -583,7 +583,7 @@ tr:last-child td{border-bottom:none}
         </div>
         <div style="display:flex;gap:7px">
           <button class="btn btn-g btn-sm" onclick="gerarPlanoIA()">✦ Gerar com IA</button>
-          <button class="btn btn-p btn-sm" onclick="openModal('m-pa')">+ Nova Ação</button>
+          <button class="btn btn-p btn-sm" onclick="openM('m-pa')">+ Nova Ação</button>
         </div>
       </div>
       <div id="pa-diag" style="margin-bottom:16px"></div>
@@ -601,7 +601,7 @@ tr:last-child td{border-bottom:none}
       <div class="kg g3" id="rh-kpis"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <input class="si" id="rh-srch" placeholder="🔍 Buscar colaborador..." oninput="renderColabs()" style="max-width:320px"/>
-        <button class="btn btn-p btn-sm" onclick="openModal('m-colab')">+ Colaborador</button>
+        <button class="btn btn-p btn-sm" onclick="openM('m-colab')">+ Colaborador</button>
       </div>
       <div id="rh-lista"></div>
     </div>
@@ -616,7 +616,7 @@ tr:last-child td{border-bottom:none}
     <div class="kg g3" id="vag-kpis"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div style="font-size:12px;color:var(--t2)">Defina o perfil ideal para cada posição e acompanhe as contratações</div>
-      <button class="btn btn-p btn-sm" onclick="openModal('m-vaga')">+ Nova Vaga</button>
+      <button class="btn btn-p btn-sm" onclick="openM('m-vaga')">+ Nova Vaga</button>
     </div>
     <div id="vag-lista"></div>
   </div>
