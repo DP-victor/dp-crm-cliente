@@ -1205,8 +1205,10 @@ function renderLeads(){
 }
 function updLead(id,f,v){
   const l=leads.find(l=>l.dbId===id);if(!l)return;
-  l[f]=v;saveLeadDB(l);toast(`✓ ${l.nm} atualizado`);
-  onPeriod();renderLeads();
+  l[f]=v;
+  saveLeadDB(l).then(ok=>{
+    if(ok){toast('✓ '+l.nm+' atualizado');onPeriod();renderLeads();}
+  });
 }
 async function delLead(id){
   if(!confirm('Remover lead?'))return;
@@ -1251,14 +1253,15 @@ async function saveLeadDB(lead){
     atualizado_em:new Date().toISOString()};
   if(lead.dbId&&typeof lead.dbId==='number'){
     const{error}=await DB.from('leads').update(p).eq('id',lead.dbId);
-    if(error){toast('Erro: '+error.message,'err');return;}
+    if(error){console.error('UPDATE lead erro:',error);toast('Erro ao atualizar: '+error.message,'err');return false;}
     if(lead.st==='venda'&&lead.rec>0)await gerarEntradas(lead);
   } else {
     const{data,error}=await DB.from('leads').insert(p).select().single();
-    if(error){toast('Erro lead: '+error.message,'err');return;}
+    if(error){console.error('INSERT lead erro:',error);toast('Erro ao inserir: '+error.message,'err');return false;}
     if(data){lead.dbId=data.id;lead.id=data.id;}
     if(lead.st==='venda'&&lead.rec>0)await gerarEntradas(lead);
   }
+  return true;
 }
 async function gerarEntradas(lead){
   const{data:ex}=await DB.from('financeiro').select('id').eq('empresa_id',EID).eq('lead_id',lead.dbId);
@@ -1509,11 +1512,15 @@ async function saveLead(){
     meio:document.getElementById('ml-meio').value,parc:+document.getElementById('ml-parc').value||1,
     taxa:+document.getElementById('ml-taxa').value||0,d1p:document.getElementById('ml-d1p').value,
     dbId:editId?+editId:null};
-  await saveLeadDB(lead);
-  if(!editId)leads.push(lead);
-  else{const i=leads.findIndex(l=>l.dbId===+editId);if(i>=0)leads[i]=lead;}
-  closeM('m-lead');clearLeadModal();toast(`✓ ${nm} salvo!`);
-  await loadLeads();fillLeadSelects();onPeriod();renderLeads();
+  const ok=await saveLeadDB(lead);
+  if(!ok){toast('Erro ao salvar lead — verifique o console','err');return;}
+  closeM('m-lead');
+  clearLeadModal();
+  toast('✓ '+nm+' salvo com sucesso!');
+  await loadLeads();
+  fillLeadSelects();
+  onPeriod();
+  renderLeads();
 }
 function clearLeadModal(){
   ['ml-nm','ml-tel','ml-prod','ml-vend','ml-prosp','ml-val','ml-obs','ml-data','ml-cac','ml-d1p','ml-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
