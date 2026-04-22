@@ -932,11 +932,16 @@ async function loadVagas(){const{data}=await DB.from('vagas').select('*').eq('em
 async function loadPlanos(){const{data}=await DB.from('plano_acao_financeiro').select('*').eq('empresa_id',EID).order('criado_em',{ascending:false});planos=data||[];}
 function fillLeadSelects(){
   const vd=leads.filter(l=>l.st==='venda');
-  ['mcv-lead','me-lead','mce-lead'].forEach(id=>{
+  const todos=leads;
+  // custos variaveis e entradas: apenas vendas
+  ['mcv-lead','me-lead'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const base=id==='me-lead'?'<option value="">— manual —</option>':'<option value="">— nenhum —</option>';
     el.innerHTML=base+vd.map(l=>`<option value="${l.dbId}">${l.nm}</option>`).join('');
   });
+  // custo entrega: todos os leads
+  const mce=document.getElementById('mce-lead');
+  if(mce)mce.innerHTML='<option value="">— selecione o cliente —</option>'+todos.map(l=>`<option value="${l.dbId}">${l.nm} ${l.st==='venda'?'✓':l.st==='ativo'?'●':'✗'}</option>`).join('');
 }
 
 // ── PERÍODO ──
@@ -1562,13 +1567,27 @@ async function saveEntrada(){
 }
 function calcCE(){const h=+document.getElementById('mce-h').value||0;const ch=+document.getElementById('mce-ch').value||0;document.getElementById('ce-prev').textContent=R(h*ch);}
 async function saveCE(){
-  const lid=document.getElementById('mce-lead').value;const h=+document.getElementById('mce-h').value||0;const ch=+document.getElementById('mce-ch').value||0;const dt=document.getElementById('mce-data').value;
-  if(!lid||!h||!ch||!dt){alert('Preencha todos os campos');return;}
-  const val=h*ch;const ds=document.getElementById('mce-ds').value||`Horas — ${document.getElementById('mce-cat').value}`;
-  const{error}=await DB.from('custos_cliente').insert({empresa_id:EID,nome:ds,categoria:document.getElementById('mce-cat').value,valor:val,tipo:'variavel',data_custo:iso(dt),lead_id:+lid,horas_trabalhadas:h,descricao:ds});
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeM('m-ce');['mce-h','mce-ch','mce-data','mce-ds'].forEach(id=>document.getElementById(id).value='');
-  await loadCV();toast('✓ Horas lançadas!');renderCE();
+  const lid=document.getElementById('mce-lead').value;
+  const h=+document.getElementById('mce-h').value||0;
+  const ch=+document.getElementById('mce-ch').value||0;
+  const dt=document.getElementById('mce-data').value;
+  if(!h){alert('Informe as horas trabalhadas');return;}
+  if(!ch){alert('Informe o custo por hora');return;}
+  if(!dt){alert('Informe a data');return;}
+  const val=h*ch;
+  const cat=document.getElementById('mce-cat').value;
+  const ds=document.getElementById('mce-ds').value||('Horas '+cat+' — '+new Date(dt+'T12:00:00').toLocaleDateString('pt-BR'));
+  const payload={empresa_id:EID,nome:ds,categoria:cat,valor:val,tipo:'variavel',
+    data_custo:iso(dt),horas_trabalhadas:h,descricao:ds};
+  if(lid)payload.lead_id=+lid;
+  const{error}=await DB.from('custos_cliente').insert(payload);
+  if(error){console.error('saveCE erro:',error);toast('Erro ao lançar: '+error.message,'err');return;}
+  closeM('m-ce');
+  ['mce-h','mce-ch','mce-data','mce-ds'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('ce-prev').textContent='R$ 0';
+  await loadCV();
+  toast('✓ Horas lançadas com sucesso!');
+  renderCE();
 }
 async function saveColab(){
   const nm=document.getElementById('mco-nm').value.trim();const cg=document.getElementById('mco-cg').value.trim();
@@ -1619,7 +1638,11 @@ async function updEntSt(id,st){await DB.from('financeiro').update({status:st}).e
 async function delEnt(id){if(!confirm('Remover?'))return;await DB.from('financeiro').delete().eq('id',id);entradas=entradas.filter(e=>e.id!==id);toast('Removido');renderEntradas();}
 
 // UTILS
-function openM(id){document.getElementById(id)?.classList.add('on');}
+function openM(id){
+  // Repopula selects antes de abrir modais que dependem de leads
+  if(id==='m-ce'||id==='m-cv'||id==='m-entrada')fillLeadSelects();
+  document.getElementById(id)?.classList.add('on');
+}
 function closeM(id){document.getElementById(id)?.classList.remove('on');}
 function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(tp?' '+tp:'');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.on').forEach(m=>m.classList.remove('on'));});
