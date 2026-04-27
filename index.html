@@ -1017,7 +1017,10 @@ function stats(ls){
   const vd=ls.filter(l=>l.st==='venda');
   const tax=getTax();
   const rec=vd.reduce((s,l)=>s+l.rec,0);
-  const liq=rec*(1-tax);
+  // Entradas manuais pagas (sem lead_id = não geradas automaticamente por venda, evita duplicação)
+  const recManual=entradas.filter(e=>e.status==='pago'&&!e.lead_id).reduce((s,e)=>s+Number(e.valor),0);
+  const recTotal=rec+recManual;
+  const liq=recTotal*(1-tax);
   const totalCF=cf.reduce((s,c)=>s+Number(c.valor),0);
   const totalCV=cv.reduce((s,c)=>s+Number(c.valor),0);
   const totalC=totalCF+totalCV;
@@ -1035,7 +1038,7 @@ function stats(ls){
   ls.forEach(l=>{if(l.tmp)tmps[l.tmp]=(tmps[l.tmp]||0)+1;});
   const oris={};ls.forEach(l=>{const o=l.ori||'Outros';oris[o]=(oris[o]||0)+1;});
   return{tot:ls.length,vd:vd.length,per:ls.filter(l=>l.st==='perdido').length,
-    ati:ls.filter(l=>l.st==='ativo').length,rec,liq,lucro,tax,totalCF,totalCV,totalC,
+    ati:ls.filter(l=>l.st==='ativo').length,rec:recTotal,recLeads:rec,recManual,liq,lucro,tax,totalCF,totalCV,totalC,
     conv,ticket,cacM,ltv,be,vbe,mOp,mb:(1-tax)*100,etapas,tmps,oris,vdList:vd};
 }
 
