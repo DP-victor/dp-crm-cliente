@@ -97,6 +97,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .btn-r{background:rgba(240,72,85,.15);color:var(--r);border:1px solid rgba(240,72,85,.25)}.btn-r:hover{background:rgba(240,72,85,.25)}
 .btn-sm{padding:4px 10px;font-size:10px}
 .btn-xs{padding:3px 8px;font-size:10px;border-radius:6px}
+.kb-filt.on{background:var(--c);color:#000;border-color:var(--c)}
 
 /* ══════════ KPI CARDS ══════════ */
 .kg{display:grid;gap:12px;margin-bottom:18px}
@@ -464,12 +465,23 @@ tr:last-child td{border-bottom:none}
 
   <!-- ── KANBAN ── -->
   <div class="view" id="v-kanban">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
       <div>
         <div style="font-family:var(--f-title);font-size:15px;font-weight:700">Pipeline Visual</div>
         <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:2px">Mova leads com as setas ← →</div>
       </div>
       <button class="btn btn-p btn-sm" onclick="openM('m-lead')">+ Novo Lead</button>
+    </div>
+    <div id="kb-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FILTRAR:</span>
+      <button class="btn btn-g btn-xs kb-filt on" onclick="filtrarKanban('',this)">Todos</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+      <label style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="kb-alerta" onchange="renderKanban()" style="accent-color:var(--o)"> ALERTAR PARADOS HÁ MAIS DE
+      </label>
+      <input type="number" id="kb-dias" value="3" min="1" max="60" style="width:52px;background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:3px 7px;color:var(--tx);font-family:var(--f-mono);font-size:11px;outline:none" onchange="renderKanban()">
+      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">DIAS</span>
     </div>
     <div class="kb" id="kb-wrap"></div>
   </div>
@@ -641,7 +653,11 @@ tr:last-child td{border-bottom:none}
         <div style="font-family:var(--f-title);font-size:15px;font-weight:700">Equipe Comercial</div>
         <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:2px">Gerencie os acessos dos seus vendedores ao portal</div>
       </div>
-      <button class="btn btn-p btn-sm" onclick="abrirModalVendedor()">+ Adicionar Vendedor</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="eq-mes" class="psel" onchange="renderEquipe()"></select>
+        <select id="eq-ano" class="psel" onchange="renderEquipe()"></select>
+        <button class="btn btn-p btn-sm" onclick="abrirModalVendedor()">+ Adicionar Vendedor</button>
+      </div>
     </div>
     <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--t2);line-height:1.7">
       Cada vendedor acessa o portal pela aba <strong style="color:var(--c)">"ACESSO VENDEDOR"</strong> na tela de login, usando o e-mail e a senha que você definir aqui. Eles visualizam apenas o Kanban, os leads deles e as metas.
@@ -687,7 +703,7 @@ tr:last-child td{border-bottom:none}
         <div class="fg"><label class="fl">Telefone</label><input class="fi" id="ml-tel" placeholder="(11) 99999-9999"/></div>
         <div class="fg"><label class="fl">Origem</label><select class="fs" id="ml-ori"><option>Ligação</option><option>Indicação</option><option>Evento</option><option>Instagram</option><option>Google</option><option>LinkedIn</option><option>YouTube</option><option>Outros</option></select></div>
         <div class="fg"><label class="fl">Produto/Serviço</label><input class="fi" id="ml-prod" placeholder="Ex: Consultoria"/></div>
-        <div class="fg"><label class="fl">Closer (vendedor)</label><input class="fi" id="ml-vend" placeholder="Nome do closer"/></div>
+        <div class="fg"><label class="fl">Closer (vendedor)</label><select class="fs" id="ml-vend"><option value="">— selecione —</option></select></div>
         <div class="fg"><label class="fl">BDR/SDR</label><input class="fi" id="ml-prosp" placeholder="Nome do prospectador"/></div>
         <div class="fg"><label class="fl">Etapa</label><select class="fs" id="ml-etapa"><option value="1">Conexão</option><option value="2">Apresentação</option><option value="3">Proposta</option><option value="4">Fechamento</option><option value="5">Referido</option></select></div>
         <div class="fg"><label class="fl">Temperatura</label><select class="fs" id="ml-temp"><option value="quente">🔥 Quente</option><option value="morno">🌡 Morno</option><option value="frio">❄ Frio</option></select></div>
@@ -988,15 +1004,23 @@ async function loadPlanos(){const{data}=await DB.from('plano_acao_financeiro').s
 function fillLeadSelects(){
   const vd=leads.filter(l=>l.st==='venda');
   const todos=leads;
-  // custos variaveis e entradas: apenas vendas
   ['mcv-lead','me-lead'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const base=id==='me-lead'?'<option value="">— manual —</option>':'<option value="">— nenhum —</option>';
     el.innerHTML=base+vd.map(l=>`<option value="${l.dbId}">${l.nm}</option>`).join('');
   });
-  // custo entrega: todos os leads
   const mce=document.getElementById('mce-lead');
   if(mce)mce.innerHTML='<option value="">— selecione o cliente —</option>'+todos.map(l=>`<option value="${l.dbId}">${l.nm} ${l.st==='venda'?'✓':l.st==='ativo'?'●':'✗'}</option>`).join('');
+  // Popula select de closer com vendedores cadastrados da empresa
+  const mlVend=document.getElementById('ml-vend');
+  if(mlVend){
+    // Coleta nomes únicos: vendedores cadastrados + já usados nos leads
+    const cadastrados=(equipeVendedores||[]).map(v=>v.nome);
+    const nosLeads=[...new Set(leads.map(l=>l.vend).filter(Boolean))];
+    const todos=[...new Set([...cadastrados,...nosLeads])].sort();
+    const cur=mlVend.value;
+    mlVend.innerHTML='<option value="">— selecione —</option>'+todos.map(n=>`<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+  }
 }
 
 // ── PERÍODO ──
@@ -1236,16 +1260,64 @@ function renderBiRH(){
 function dreRows(rows){return rows.map(r=>{if(r.sep)return`<div class="fin-sec">${r.lbl}</div>`;return`<div class="fin-row"><span class="fin-lbl">${r[0]}</span><span class="fin-val ${r[2]}">${typeof r[1]==='number'?R(r[1]):r[1]}</span></div>`;}).join('');}
 
 // ═════════════ KANBAN ═════════════
+let _kbFiltro='';
+function filtrarKanban(vend,el){
+  _kbFiltro=vend;
+  document.querySelectorAll('.kb-filt').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderKanban();
+}
 function renderKanban(){
+  // Reconstrói botões de filtro
+  const fb=document.getElementById('kb-filtros');
+  if(fb){
+    const vendedores=[...new Set(leads.map(l=>l.vend).filter(Boolean))].sort();
+    fb.innerHTML=`<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FILTRAR:</span>
+      <button class="btn btn-g btn-xs kb-filt${_kbFiltro===''?' on':''}" onclick="filtrarKanban('',this)">Todos</button>
+      ${vendedores.map(v=>`<button class="btn btn-g btn-xs kb-filt${_kbFiltro===v?' on':''}" onclick="filtrarKanban('${v}',this)">${v}</button>`).join('')}`;
+  }
+  const alerta=document.getElementById('kb-alerta')?.checked;
+  const dias=parseInt(document.getElementById('kb-dias')?.value)||3;
+  const agora=new Date();
+  const filtrados=_kbFiltro?leads.filter(l=>l.vend===_kbFiltro):leads;
   document.getElementById('kb-wrap').innerHTML=[1,2,3,4,5].map(e=>{
-    const items=leads.filter(l=>l.ord===e);
-    return`<div class="kb-col"><div class="kb-hd" style="--kc:${EC[e]}"><div class="kb-title">${EN[e]}</div><div class="kb-cnt">${items.length}</div></div><div class="kb-body">${items.map(l=>`<div class="kb-card"><div class="kb-nm">${l.nm}</div><div class="kb-meta"><span class="tdot t${l.tmp?l.tmp[0]:'-'}"></span><span>${l.tmp||'—'}</span>${badgeSt(l.st)}</div>${l.rec>0?`<div style="font-family:var(--f-mono);font-size:11px;color:var(--g);margin-top:4px">${R(l.rec)}</div>`:''}<div class="kb-acts">${e>1?`<button class="btn btn-g btn-xs" onclick="mvKanban(${l.dbId},-1)">←</button>`:''}<button class="btn btn-g btn-xs" onclick="editLead(${l.dbId})">✎</button>${e<5?`<button class="btn btn-p btn-xs" onclick="mvKanban(${l.dbId},1)">→</button>`:''}<select class="es" style="flex:1;font-size:10px" onchange="updLead(${l.dbId},'st',this.value)"><option value="ativo"${l.st==='ativo'?' selected':''}>● Ativo</option><option value="venda"${l.st==='venda'?' selected':''}>✓ Venda</option><option value="perdido"${l.st==='perdido'?' selected':''}>✗ Perdido</option></select></div></div>`).join('')}</div></div>`;
+    const items=filtrados.filter(l=>l.ord===e);
+    return`<div class="kb-col"><div class="kb-hd" style="--kc:${EC[e]}"><div class="kb-title">${EN[e]}</div><div class="kb-cnt">${items.length}</div></div><div class="kb-body">${items.map(l=>{
+      let diasParado=0;
+      if(alerta&&l.cx){const d=new Date(l.cx+'T12:00:00');diasParado=Math.floor((agora-d)/(1000*60*60*24));}
+      const parado=alerta&&diasParado>=dias&&l.st==='ativo';
+      return`<div class="kb-card" style="${parado?'border-color:var(--o);border-width:1.5px':''}">
+        ${parado?`<div style="font-family:var(--f-mono);font-size:9px;color:var(--o);margin-bottom:5px;letter-spacing:1px">⏱ ${diasParado}d PARADO</div>`:''}
+        <div class="kb-nm">${l.nm}</div>
+        <div class="kb-meta"><span class="tdot t${l.tmp?l.tmp[0]:'-'}"></span><span>${l.tmp||'—'}</span>${badgeSt(l.st)}</div>
+        ${l.vend?`<div style="font-size:10px;color:var(--t2);font-family:var(--f-mono);margin-top:3px">↳ ${l.vend}</div>`:''}
+        ${l.rec>0?`<div style="font-family:var(--f-mono);font-size:11px;color:var(--g);margin-top:4px">${R(l.rec)}</div>`:''}
+        <div class="kb-acts">
+          ${e>1?`<button class="btn btn-g btn-xs" onclick="mvKanban(${l.dbId},-1)">←</button>`:''}
+          <button class="btn btn-g btn-xs" onclick="editLead(${l.dbId})">✎</button>
+          <button class="btn btn-g btn-xs" onclick="abrirTimeline(${l.dbId},'${l.nm.replace(/'/g,"\\'")}')">📋</button>
+          ${e<5?`<button class="btn btn-p btn-xs" onclick="mvKanban(${l.dbId},1)">→</button>`:''}
+          <select class="es" style="flex:1;font-size:10px" onchange="updLead(${l.dbId},'st',this.value)">
+            <option value="ativo"${l.st==='ativo'?' selected':''}>● Ativo</option>
+            <option value="venda"${l.st==='venda'?' selected':''}>✓ Venda</option>
+            <option value="perdido"${l.st==='perdido'?' selected':''}>✗ Perdido</option>
+          </select>
+        </div>
+      </div>`;
+    }).join('')}</div></div>`;
   }).join('');
 }
 function mvKanban(id,dir){
   const l=leads.find(l=>l.dbId===id);if(!l)return;
   const n=l.ord+dir;if(n<1||n>5)return;
-  l.ord=n;saveLeadDB(l);toast(`✓ ${l.nm} → ${EN[n]}`);renderKanban();onPeriod();
+  const nomeAntes=EN[l.ord];
+  l.ord=n;
+  saveLeadDB(l);
+  // Registra movimentação como atividade automática
+  const usuario=VENDEDOR_SESSAO?.nome||(document.getElementById('u-nm')?.textContent||'');
+  DB.from('lead_atividades').insert({empresa_id:EID,lead_id:id,tipo:'sistema',
+    descricao:`Movido de "${nomeAntes}" para "${EN[n]}"`,usuario});
+  toast(`✓ ${l.nm} → ${EN[n]}`);renderKanban();onPeriod();
 }
 
 // ═════════════ LEADS TABLE ═════════════
@@ -1286,6 +1358,8 @@ function editLead(id){
   const l=leads.find(l=>l.dbId===id);if(!l)return;
   document.getElementById('ml-id').value=id;
   document.getElementById('ml-title').textContent='Editar Lead';
+  fillLeadSelects();
+  document.getElementById('ml-vend').value=l.vend||'';
   document.getElementById('ml-nm').value=l.nm;
   document.getElementById('ml-tel').value=l.tel;
   document.getElementById('ml-ori').value=l.ori;
@@ -1596,7 +1670,8 @@ async function saveLead(){
   renderLeads();
 }
 function clearLeadModal(){
-  ['ml-nm','ml-tel','ml-prod','ml-vend','ml-prosp','ml-val','ml-obs','ml-data','ml-cac','ml-d1p','ml-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['ml-nm','ml-tel','ml-prod','ml-prosp','ml-val','ml-obs','ml-data','ml-cac','ml-d1p','ml-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const mlVend=document.getElementById('ml-vend');if(mlVend){mlVend.value='';mlVend.readOnly=false;mlVend.style.opacity='';}
   document.getElementById('ml-meses').value='1';document.getElementById('ml-parc').value='1';
   document.getElementById('ml-taxa').value='';document.getElementById('ml-title').textContent='+ Novo Lead';
 }
@@ -1876,6 +1951,31 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+<!-- Modal Timeline Atividades -->
+<div class="modal" id="m-timeline">
+  <div class="modal-box mlg">
+    <div class="mhd">
+      <div class="mtl" id="tl-title">📋 Atividades</div>
+      <button class="mcl" onclick="closeM('m-timeline')">✕</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="tl-lid"/>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <select class="fs" id="tl-tipo" style="flex:1;min-width:120px">
+          <option value="whatsapp">💬 WhatsApp</option>
+          <option value="ligacao">📞 Ligação</option>
+          <option value="email">📧 E-mail</option>
+          <option value="reuniao">🤝 Reunião</option>
+          <option value="nota">📝 Nota</option>
+        </select>
+        <input class="fi" id="tl-desc" placeholder="O que aconteceu? Ex: Cliente respondeu com interesse..." style="flex:3;min-width:200px"/>
+        <button class="btn btn-p" onclick="salvarAtividade()" style="flex-shrink:0">+ Registrar</button>
+      </div>
+      <div id="tl-lista" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Vendedor -->
 <div class="modal" id="m-vendedor">
   <div class="modal-box">
@@ -1930,24 +2030,50 @@ async function loadEquipe(){
 
 async function renderEquipe(){
   await loadEquipe();
-  // Carrega metas do mês atual para exibir junto
-  const agora = new Date();
-  const mes = agora.getMonth()+1, ano = agora.getFullYear();
-  const {data: metas} = await DB.from('vendedor_metas')
-    .select('*').eq('empresa_id', EID).eq('mes', mes).eq('ano', ano);
-  const metaMap = {};
-  (metas||[]).forEach(m => metaMap[m.vendedor_nome] = m);
+  // Inicializa selects de período se ainda não foram
+  const agora=new Date();
+  const selMes=document.getElementById('eq-mes');
+  const selAno=document.getElementById('eq-ano');
+  if(selMes&&!selMes.options.length){
+    const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    selMes.innerHTML=meses.map((m,i)=>`<option value="${i+1}"${i+1===agora.getMonth()+1?' selected':''}>${m}</option>`).join('');
+  }
+  if(selAno&&!selAno.options.length){
+    for(let y=agora.getFullYear()-1;y<=agora.getFullYear()+1;y++)
+      selAno.innerHTML+=`<option value="${y}"${y===agora.getFullYear()?' selected':''}>${y}</option>`;
+  }
+  const mes=+(selMes?.value||agora.getMonth()+1);
+  const ano=+(selAno?.value||agora.getFullYear());
 
-  const lista = document.getElementById('equipe-lista');
-  if(!lista) return;
+  // Carrega metas do período selecionado
+  const {data: metas}=await DB.from('vendedor_metas').select('*').eq('empresa_id',EID).eq('mes',mes).eq('ano',ano);
+  const metaMap={};
+  (metas||[]).forEach(m=>metaMap[m.vendedor_nome]=m);
+
+  // Carrega receita fechada por vendedor no período
+  const recMap={};
+  leads.forEach(l=>{
+    if(l.st==='venda'&&l.vend){
+      if(!recMap[l.vend])recMap[l.vend]=0;
+      recMap[l.vend]+=l.rec;
+    }
+  });
+
+  const lista=document.getElementById('equipe-lista');
+  if(!lista)return;
   if(!equipeVendedores.length){
-    lista.innerHTML = `<div class="empty"><div class="empty-ic">◈</div><div class="empty-tx">Nenhum vendedor cadastrado ainda</div></div>`;
+    lista.innerHTML=`<div class="empty"><div class="empty-ic">◈</div><div class="empty-tx">Nenhum vendedor cadastrado ainda</div></div>`;
     return;
   }
-  lista.innerHTML = equipeVendedores.map(v => {
-    const m = metaMap[v.nome];
-    const metaVal = m ? Number(m.meta_valor) : 0;
-    const metaId = m ? m.id : null;
+
+  const mesNome=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mes-1];
+  lista.innerHTML=equipeVendedores.map(v=>{
+    const m=metaMap[v.nome];
+    const metaVal=m?Number(m.meta_valor):0;
+    const metaId=m?m.id:null;
+    const rec=recMap[v.nome]||0;
+    const pct=metaVal>0?Math.min(Math.round((rec/metaVal)*100),100):0;
+    const barColor=pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)';
     return `
     <div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -1957,16 +2083,25 @@ async function renderEquipe(){
           <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">${v.email}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="sb ${v.ativo ? 'sb-v' : 'sb-p'}">${v.ativo ? '✓ Ativo' : '✗ Inativo'}</span>
+          <span class="sb ${v.ativo?'sb-v':'sb-p'}">${v.ativo?'✓ Ativo':'✗ Inativo'}</span>
           <button class="btn btn-g btn-xs" onclick="editarVendedor('${v.id}')">✎ Editar</button>
-          <button class="btn btn-r btn-xs" onclick="removerVendedor('${v.id}', '${v.nome}')">✕</button>
+          <button class="btn btn-r btn-xs" onclick="removerVendedor('${v.id}','${v.nome}')">✕</button>
         </div>
       </div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">META ${agora.toLocaleString('pt-BR',{month:'short'}).toUpperCase()}/${ano}</span>
-        <input class="fi-inp" type="number" id="meta-inp-${v.id}" value="${metaVal}" min="0" step="1000" style="width:140px;text-align:left" placeholder="R$ 0"/>
-        <button class="btn btn-p btn-xs" onclick="salvarMeta('${v.id}','${v.nome}','${metaId||''}',${mes},${ano})">Salvar meta</button>
-        ${metaVal>0?`<span style="font-family:var(--f-mono);font-size:11px;color:var(--g)">${R(metaVal)}</span>`:''}
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">META ${mesNome.toUpperCase()}/${ano}</span>
+          <input class="fi-inp" type="number" id="meta-inp-${v.id}" value="${metaVal}" min="0" step="1000" style="width:140px;text-align:left" placeholder="R$ 0"/>
+          <button class="btn btn-p btn-xs" onclick="salvarMeta('${v.id}','${v.nome}','${metaId||''}',${mes},${ano})">Salvar meta</button>
+        </div>
+        ${metaVal>0?`
+        <div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono)">
+          <span>${R(rec)} de ${R(metaVal)}</span>
+          <span style="color:${barColor};font-weight:600">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--s3);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .8s ease"></div>
+        </div>`:'<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono)">Meta não definida para este período</div>'}
       </div>
     </div>`;
   }).join('');
@@ -2049,7 +2184,52 @@ async function removerVendedor(id, nome){
   toast(`✓ Acesso de ${nome} removido.`);
   await renderEquipe();
 }
-// ─────────────── FIM EQUIPE COMERCIAL ───────────────
+// ─────────────── TIMELINE DE ATIVIDADES ───────────────
+const TIPO_ICON={whatsapp:'💬',ligacao:'📞',email:'📧',reuniao:'🤝',nota:'📝',sistema:'⚙️'};
+
+async function abrirTimeline(leadId, leadNome){
+  document.getElementById('tl-lid').value=leadId;
+  document.getElementById('tl-title').textContent=`📋 ${leadNome}`;
+  document.getElementById('tl-desc').value='';
+  openM('m-timeline');
+  await carregarTimeline(leadId);
+}
+
+async function carregarTimeline(leadId){
+  const {data} = await DB.from('lead_atividades')
+    .select('*').eq('lead_id', leadId)
+    .order('criado_em', {ascending:false});
+  const lista = document.getElementById('tl-lista');
+  if(!data||!data.length){
+    lista.innerHTML='<div class="empty"><div class="empty-ic">📋</div><div class="empty-tx">Nenhuma atividade registrada ainda</div></div>';
+    return;
+  }
+  lista.innerHTML=data.map(a=>`
+    <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--b1)">
+      <div style="font-size:18px;flex-shrink:0;padding-top:2px">${TIPO_ICON[a.tipo]||'📝'}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--tx);line-height:1.6">${a.descricao}</div>
+        <div style="font-size:10px;color:var(--t3);font-family:var(--f-mono);margin-top:3px">${a.usuario?a.usuario+' · ':''}${new Date(a.criado_em).toLocaleString('pt-BR')}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function salvarAtividade(){
+  const leadId=+document.getElementById('tl-lid').value;
+  const tipo=document.getElementById('tl-tipo').value;
+  const desc=document.getElementById('tl-desc').value.trim();
+  if(!desc){toast('Descreva a atividade','err');return;}
+  const usuario=VENDEDOR_SESSAO?.nome||(document.getElementById('u-nm')?.textContent||'');
+  const {error}=await DB.from('lead_atividades').insert({
+    empresa_id:EID, lead_id:leadId, tipo, descricao:desc, usuario
+  });
+  if(error){toast('Erro: '+error.message,'err');return;}
+  document.getElementById('tl-desc').value='';
+  toast('✓ Atividade registrada!');
+  await carregarTimeline(leadId);
+  // Registra atividade automática ao mover etapa também (reutilizada por mvKanban)
+}
+// ─────────────── FIM TIMELINE ───────────────
 </script>
 
 </body>
