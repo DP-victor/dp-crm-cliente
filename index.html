@@ -277,6 +277,7 @@ tr:last-child td{border-bottom:none}
     <div class="auth-tagline">Portal do Cliente · 2026</div>
     <div class="auth-tabs">
       <button class="at on" onclick="switchAt('login',this)">ENTRAR</button>
+      <button class="at" onclick="switchAt('vend',this)">ACESSO VENDEDOR</button>
       <button class="at" onclick="switchAt('cad',this)">SOLICITAR ACESSO</button>
     </div>
   </div>
@@ -288,6 +289,15 @@ tr:last-child td{border-bottom:none}
       <input class="inp" type="password" id="l-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
       <button class="auth-btn" onclick="doLogin()">ENTRAR NO PORTAL</button>
       <div class="auth-err" id="l-err"></div>
+    </div>
+    <div class="ap" id="ap-vend">
+      <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;margin-bottom:16px">Acesso restrito à equipe comercial</div>
+      <label class="lbl">E-mail</label>
+      <input class="inp" type="email" id="v-em" placeholder="seu@email.com" autocomplete="email"/>
+      <label class="lbl">Senha</label>
+      <input class="inp" type="password" id="v-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLoginVendedor()"/>
+      <button class="auth-btn" onclick="doLoginVendedor()">ACESSAR ÁREA COMERCIAL</button>
+      <div class="auth-err" id="v-err"></div>
     </div>
     <div class="ap" id="ap-cad">
       <div class="row2">
@@ -322,22 +332,24 @@ tr:last-child td{border-bottom:none}
   <nav class="sb-nav">
     <div class="sb-sec">Visão</div>
     <button class="sb-a on" onclick="nav('overview',this)"><span class="ic">◈</span>Visão Geral</button>
-    <button class="sb-a" onclick="nav('dashboard',this)"><span class="ic">▦</span>Dashboard BI</button>
+    <button class="sb-a sb-only-admin" onclick="nav('dashboard',this)"><span class="ic">▦</span>Dashboard BI</button>
     <div class="sb-sec">Comercial</div>
     <button class="sb-a" onclick="nav('kanban',this)"><span class="ic">⊞</span>Kanban</button>
     <button class="sb-a" onclick="nav('leads',this)"><span class="ic">◎</span>Leads & Pipeline</button>
-    <div class="sb-sec">Financeiro</div>
-    <button class="sb-a" onclick="nav('fin',this)"><span class="ic">◐</span>Financeiro</button>
-    <div class="sb-sec">Pessoas</div>
-    <button class="sb-a" onclick="nav('rh',this)"><span class="ic">⊛</span>RH & Colaboradores</button>
-    <button class="sb-a" onclick="nav('vagas',this)"><span class="ic">◑</span>Vagas em Aberto</button>
+    <button class="sb-a sb-only-vend" onclick="nav('metas',this)" style="display:none"><span class="ic">◎</span>Minhas Metas</button>
+    <div class="sb-sec sb-only-admin">Financeiro</div>
+    <button class="sb-a sb-only-admin" onclick="nav('fin',this)"><span class="ic">◐</span>Financeiro</button>
+    <div class="sb-sec sb-only-admin">Pessoas</div>
+    <button class="sb-a sb-only-admin" onclick="nav('rh',this)"><span class="ic">⊛</span>RH & Colaboradores</button>
+    <button class="sb-a sb-only-admin" onclick="nav('vagas',this)"><span class="ic">◑</span>Vagas em Aberto</button>
+    <button class="sb-a sb-only-admin" onclick="nav('equipe',this)"><span class="ic">◈</span>Equipe Comercial</button>
   </nav>
   <div class="sb-foot">
     <div class="u-row">
       <div class="u-av" id="u-av">DP</div>
       <div style="flex:1;overflow:hidden">
         <div class="u-nm" id="u-nm">—</div>
-        <div class="u-rl">cliente ativo</div>
+        <div class="u-rl" id="u-rl">cliente ativo</div>
       </div>
       <button class="logout" onclick="doLogout()" title="Sair">⏻</button>
     </div>
@@ -621,6 +633,34 @@ tr:last-child td{border-bottom:none}
     <div id="vag-lista"></div>
   </div>
 
+  <!-- ── EQUIPE COMERCIAL (admin) ── -->
+  <div class="view" id="v-equipe">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-family:var(--f-title);font-size:15px;font-weight:700">Equipe Comercial</div>
+        <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:2px">Gerencie os acessos dos seus vendedores ao portal</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="abrirModalVendedor()">+ Adicionar Vendedor</button>
+    </div>
+    <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--t2);line-height:1.7">
+      Cada vendedor acessa o portal pela aba <strong style="color:var(--c)">"ACESSO VENDEDOR"</strong> na tela de login, usando o e-mail e a senha que você definir aqui. Eles visualizam apenas o Kanban, os leads deles e as metas.
+    </div>
+    <div id="equipe-lista"></div>
+  </div>
+
+  <!-- ── METAS (VENDEDOR) ── -->
+  <div class="view" id="v-metas">
+    <div class="kg g4" id="meta-kpis"></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h"><div class="card-t">🎯 Meta do Mês</div><div class="badge" id="meta-mes-badge">—</div></div>
+      <div id="meta-bar-vend" style="margin-bottom:8px"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="card-t">🏆 Ranking Geral</div></div>
+      <div id="meta-ranking"></div>
+    </div>
+  </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
@@ -872,7 +912,12 @@ async function doLogin(){
   if(error){document.getElementById('l-err').textContent='E-mail ou senha inválidos.';return;}
   await initApp(data.user);
 }
-async function doLogout(){await DB.auth.signOut();location.reload();}
+async function doLogout(){
+  VENDEDOR_SESSAO = null;
+  sessionStorage.removeItem('dp_vend');
+  await DB.auth.signOut();
+  location.reload();
+}
 async function checkSession(){const{data}=await DB.auth.getSession();if(data.session)await initApp(data.session.user);}
 async function doSolicitar(){
   const co=document.getElementById('c-co').value.trim();
@@ -976,10 +1021,12 @@ function renderView(nm){
   else if(nm==='fin')renderFinanceiro();
   else if(nm==='rh')renderRH();
   else if(nm==='vagas')renderVagas();
+  else if(nm==='metas')renderMetas();
+  else if(nm==='equipe')renderEquipe();
 }
 
 // ── NAV ──
-const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto'};
+const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto',metas:'Minhas Metas',equipe:'Equipe Comercial'};
 function nav(nm,el){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-'+nm)?.classList.add('on');
@@ -1650,8 +1697,296 @@ function closeM(id){document.getElementById(id)?.classList.remove('on');}
 function toast(msg,tp=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(tp?' '+tp:'');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2800);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.on').forEach(m=>m.classList.remove('on'));});
 document.querySelectorAll('.modal').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('on');});});
+// ─────────────── VENDEDOR ───────────────
+let VENDEDOR_SESSAO = null; // {id, nome, email, empresa_id, perfil}
+
+async function doLoginVendedor(){
+  const em = document.getElementById('v-em').value.trim().toLowerCase();
+  const pw = document.getElementById('v-pw').value;
+  const err = document.getElementById('v-err');
+  err.textContent = '';
+  if(!em || !pw){ err.textContent = 'Preencha e-mail e senha.'; return; }
+  const {data, error} = await DB
+    .from('usuarios')
+    .select('*')
+    .eq('email', em)
+    .eq('senha', pw)
+    .eq('perfil', 'comercial')
+    .eq('ativo', true)
+    .single();
+  if(error || !data){ err.textContent = 'E-mail ou senha incorretos.'; return; }
+  VENDEDOR_SESSAO = data;
+  sessionStorage.setItem('dp_vend', JSON.stringify(data));
+  await initVendedor(data);
+}
+
+async function initVendedor(vend){
+  // Busca a empresa vinculada ao vendedor
+  const {data: emp} = await DB.from('empresas').select('*').eq('id', vend.empresa_id).single();
+  if(!emp){ document.getElementById('v-err').textContent = 'Empresa não encontrada.'; return; }
+  EID = emp.id;
+
+  // Fecha tela de auth
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('shell').style.display = 'block';
+
+  // Preenche nome/empresa na sidebar
+  document.getElementById('sb-co').textContent = emp.nome;
+  if(emp.logo_url) document.getElementById('sb-co').innerHTML = `<img src="${emp.logo_url}" style="max-height:24px;max-width:160px;object-fit:contain;margin-top:3px"/>`;
+  document.getElementById('u-av').textContent = vend.nome.slice(0,2).toUpperCase();
+  document.getElementById('u-nm').textContent = vend.nome;
+  document.getElementById('u-rl').textContent = 'vendedor · comercial';
+
+  // Esconde itens de admin na sidebar
+  document.querySelectorAll('.sb-only-admin').forEach(el => el.style.display = 'none');
+  // Mostra item exclusivo do vendedor
+  document.querySelectorAll('.sb-only-vend').forEach(el => el.style.display = '');
+
+  // Carrega apenas leads (sem dados financeiros, RH etc.)
+  await loadLeads();
+  fillLeadSelects();
+  setDefaultDates();
+
+  // Filtra leads: vendedor só vê os dele na visão geral e no kanban
+  const nomeVend = vend.nome;
+  leads = leads.filter(l => (l.vend||'').toLowerCase() === nomeVend.toLowerCase());
+
+  // Esconde o seletor de período (não faz sentido pro vendedor)
+  const psel = document.getElementById('gPer');
+  if(psel) psel.style.display = 'none';
+
+  onPeriod();
+
+  // Redireciona para Kanban como primeira view
+  const el = document.querySelector('.sb-a[onclick*="kanban"]');
+  nav('kanban', el);
+}
+
+async function renderMetas(){
+  if(!VENDEDOR_SESSAO) return;
+  const nome = VENDEDOR_SESSAO.nome;
+  const agora = new Date();
+  const mes = agora.getMonth() + 1;
+  const ano = agora.getFullYear();
+
+  // Meta individual
+  const {data: metaRow} = await DB.from('vendedor_metas')
+    .select('*').eq('empresa_id', EID)
+    .eq('vendedor_nome', nome).eq('mes', mes).eq('ano', ano).single();
+
+  const meta = metaRow ? Number(metaRow.meta_valor) : 0;
+  const vendas = leads.filter(l => l.st === 'venda');
+  const receitaFechada = vendas.reduce((s,l)=>s+l.rec, 0);
+  const leadsAtivos = leads.filter(l=>l.st==='ativo').length;
+  const emPipeline = leads.filter(l=>l.st==='ativo').reduce((s,l)=>s+l.rec, 0);
+  const pct = meta > 0 ? Math.min(Math.round((receitaFechada/meta)*100),100) : 0;
+  const diasMes = new Date(ano, mes, 0).getDate();
+  const diaAtual = agora.getDate();
+  const projecao = diaAtual > 0 ? Math.round((receitaFechada/diaAtual)*diasMes) : 0;
+  const mesNome = agora.toLocaleString('pt-BR',{month:'long'});
+
+  // KPIs
+  document.getElementById('meta-kpis').innerHTML = [
+    {l:'Receita Fechada', v:R(receitaFechada), sub:`${vendas.length} vendas`, kc:'var(--g)'},
+    {l:'Meta do Mês', v:R(meta), sub:`${pct}% atingido`, kc:'var(--c)'},
+    {l:'Em Pipeline', v:R(emPipeline), sub:`${leadsAtivos} leads ativos`, kc:'var(--y)'},
+    {l:'Projeção Mês', v:R(projecao), sub:'ritmo atual', kc:'var(--o)'},
+  ].map((c,i)=>`<div class="kpi" style="--kc:${c.kc};animation-delay:${i*.07}s"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div><div class="kpi-sub">${c.sub}</div></div>`).join('');
+
+  // Badge e barra de progresso
+  document.getElementById('meta-mes-badge').textContent = mesNome+' '+ano;
+  document.getElementById('meta-bar-vend').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">${R(receitaFechada)} de ${R(meta)}</span>
+      <span style="font-family:var(--f-title);font-size:18px;font-weight:800;color:${pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)'}">${pct}%</span>
+    </div>
+    <div style="height:10px;background:var(--s3);border-radius:5px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)'};border-radius:5px;transition:width 1s ease"></div>
+    </div>
+    <div style="display:flex;gap:24px;margin-top:12px;font-size:11px;color:var(--t2);font-family:var(--f-mono)">
+      <span>Alcançado: <strong style="color:var(--tx)">${R(receitaFechada)}</strong></span>
+      <span>Projeção: <strong style="color:var(--tx)">${R(projecao)}</strong></span>
+      <span>Restante: <strong style="color:var(--tx)">${R(Math.max(meta-receitaFechada,0))}</strong></span>
+    </div>`;
+
+  // Ranking: todos os vendedores da mesma empresa
+  const {data: todosLeads} = await DB.from('leads').select('vendedor,receita,status,etapa').eq('empresa_id', EID).not('vendedor','is',null);
+  const ranking = {};
+  (todosLeads||[]).forEach(l=>{
+    const v = l.vendedor; if(!v) return;
+    if(!ranking[v]) ranking[v] = {receita:0, vendas:0};
+    if(l.status==='venda'||l.etapa==='Ganho'){ ranking[v].receita += Number(l.receita||0); ranking[v].vendas++; }
+  });
+  const lista = Object.entries(ranking).sort((a,b)=>b[1].receita-a[1].receita);
+  const maxR = lista[0]?.[1]?.receita || 1;
+  const pos=['🥇','🥈','🥉'];
+  document.getElementById('meta-ranking').innerHTML = lista.length ? lista.map(([nm,d],i)=>{
+    const isMe = nm.toLowerCase()===nome.toLowerCase();
+    const bar = Math.round((d.receita/maxR)*100);
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px">
+      <div style="font-size:20px;width:28px;flex-shrink:0">${pos[i]||'#'+(i+1)}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:${isMe?'var(--c)':'var(--tx)'};margin-bottom:5px">${nm}${isMe?' <span style="font-family:var(--f-mono);font-size:9px;background:rgba(0,212,255,.1);color:var(--c);padding:2px 7px;border-radius:10px;letter-spacing:1px">VOCÊ</span>':''}</div>
+        <div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${bar}%;background:${isMe?'var(--c)':'var(--b3)'};border-radius:3px"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--f-title);font-size:14px;font-weight:800;color:${isMe?'var(--c)':'var(--tx)'}">${R(d.receita)}</div>
+        <div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">${d.vendas} vendas</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="empty-ic">◎</div><div class="empty-tx">Sem dados de ranking ainda</div></div>';
+}
+
+// Override do renderView para incluir metas
+const _origRenderView = renderView;
+// ─────────────── FIM VENDEDOR ───────────────
+
 setInterval(()=>{const e=document.getElementById('nowTime');if(e)e.textContent=new Date().toLocaleString('pt-BR');},1000);
-window.addEventListener('load',()=>checkSession());
+window.addEventListener('load',()=>{
+  // Tenta auto-login de vendedor primeiro
+  const savedVend = sessionStorage.getItem('dp_vend');
+  if(savedVend){ try{ VENDEDOR_SESSAO=JSON.parse(savedVend); initVendedor(VENDEDOR_SESSAO); return; }catch(e){ sessionStorage.removeItem('dp_vend'); } }
+  checkSession();
+});
 </script>
+
+<!-- Modal Vendedor -->
+<div class="modal" id="m-vendedor">
+  <div class="modal-box">
+    <div class="mhd">
+      <div class="mtl" id="mv-title">+ Adicionar Vendedor</div>
+      <button class="mcl" onclick="closeM('m-vendedor')">✕</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="mv-id"/>
+      <div class="fg2">
+        <div class="fg full">
+          <label class="fl">Nome do vendedor *</label>
+          <input class="fi" id="mv-nome" placeholder="Ex: João Silva"/>
+          <div style="font-size:10px;color:var(--t2);margin-top:4px;font-family:var(--f-mono)">⚠ Use o mesmo nome que aparece no campo "Closer" dos leads</div>
+        </div>
+        <div class="fg full">
+          <label class="fl">E-mail de acesso *</label>
+          <input class="fi" type="email" id="mv-email" placeholder="vendedor@suaempresa.com"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Senha *</label>
+          <input class="fi" type="text" id="mv-senha" placeholder="Defina uma senha"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Status</label>
+          <select class="fs" id="mv-ativo">
+            <option value="true">✓ Ativo</option>
+            <option value="false">✗ Inativo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-g" onclick="closeM('m-vendedor')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarVendedor()">Salvar Acesso</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────── EQUIPE COMERCIAL ───────────────
+let equipeVendedores = [];
+
+async function loadEquipe(){
+  const {data} = await DB.from('usuarios')
+    .select('*')
+    .eq('empresa_id', EID)
+    .eq('perfil', 'comercial')
+    .order('nome');
+  equipeVendedores = data || [];
+}
+
+async function renderEquipe(){
+  await loadEquipe();
+  const lista = document.getElementById('equipe-lista');
+  if(!lista) return;
+  if(!equipeVendedores.length){
+    lista.innerHTML = `<div class="empty"><div class="empty-ic">◈</div><div class="empty-tx">Nenhum vendedor cadastrado ainda</div></div>`;
+    return;
+  }
+  lista.innerHTML = equipeVendedores.map(v => `
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--b2)'" onmouseout="this.style.borderColor='var(--b1)'">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--c2));display:flex;align-items:center;justify-content:center;font-family:var(--f-title);font-size:13px;font-weight:800;color:#000;flex-shrink:0">${v.nome.slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px">${v.nome}</div>
+        <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">${v.email}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="sb ${v.ativo ? 'sb-v' : 'sb-p'}">${v.ativo ? '✓ Ativo' : '✗ Inativo'}</span>
+        <button class="btn btn-g btn-xs" onclick="editarVendedor('${v.id}')">✎ Editar</button>
+        <button class="btn btn-r btn-xs" onclick="removerVendedor('${v.id}', '${v.nome}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function abrirModalVendedor(){
+  document.getElementById('mv-id').value = '';
+  document.getElementById('mv-title').textContent = '+ Adicionar Vendedor';
+  document.getElementById('mv-nome').value = '';
+  document.getElementById('mv-email').value = '';
+  document.getElementById('mv-senha').value = '';
+  document.getElementById('mv-ativo').value = 'true';
+  openM('m-vendedor');
+}
+
+function editarVendedor(id){
+  const v = equipeVendedores.find(x => x.id === id);
+  if(!v) return;
+  document.getElementById('mv-id').value = v.id;
+  document.getElementById('mv-title').textContent = 'Editar Vendedor';
+  document.getElementById('mv-nome').value = v.nome;
+  document.getElementById('mv-email').value = v.email;
+  document.getElementById('mv-senha').value = v.senha || '';
+  document.getElementById('mv-ativo').value = String(v.ativo);
+  openM('m-vendedor');
+}
+
+async function salvarVendedor(){
+  const id    = document.getElementById('mv-id').value;
+  const nome  = document.getElementById('mv-nome').value.trim();
+  const email = document.getElementById('mv-email').value.trim().toLowerCase();
+  const senha = document.getElementById('mv-senha').value.trim();
+  const ativo = document.getElementById('mv-ativo').value === 'true';
+
+  if(!nome || !email || !senha){ toast('Preencha nome, e-mail e senha.','err'); return; }
+
+  const payload = { empresa_id: EID, nome, email, senha, perfil: 'comercial', ativo };
+
+  if(id){
+    // Edição
+    const {error} = await DB.from('usuarios').update(payload).eq('id', id);
+    if(error){ toast('Erro ao salvar: ' + error.message,'err'); return; }
+    toast('✓ Acesso atualizado com sucesso!');
+  } else {
+    // Novo
+    const {error} = await DB.from('usuarios').insert(payload);
+    if(error){
+      if(error.code === '23505') toast('E-mail já cadastrado.','err');
+      else toast('Erro: ' + error.message,'err');
+      return;
+    }
+    toast('✓ Vendedor adicionado! Já pode acessar o portal.');
+  }
+
+  closeM('m-vendedor');
+  await renderEquipe();
+}
+
+async function removerVendedor(id, nome){
+  if(!confirm(`Remover acesso de "${nome}"? O vendedor não conseguirá mais entrar no portal.`)) return;
+  const {error} = await DB.from('usuarios').delete().eq('id', id);
+  if(error){ toast('Erro: ' + error.message,'err'); return; }
+  toast(`✓ Acesso de ${nome} removido.`);
+  await renderEquipe();
+}
+// ─────────────── FIM EQUIPE COMERCIAL ───────────────
+</script>
+
 </body>
 </html>
