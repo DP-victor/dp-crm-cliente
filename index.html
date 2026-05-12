@@ -420,6 +420,7 @@ tr:last-child td{border-bottom:none}
   <div class="view" id="v-dashboard">
     <div class="vtabs" id="bi-tabs">
       <button class="vt on" onclick="switchBiTab('com',this)">COMERCIAL</button>
+      <button class="vt" onclick="switchBiTab('perf',this)">PERFORMANCE</button>
       <button class="vt" onclick="switchBiTab('fin',this)">FINANCEIRO</button>
       <button class="vt" onclick="switchBiTab('rh',this)">RH</button>
     </div>
@@ -443,6 +444,10 @@ tr:last-child td{border-bottom:none}
           <div class="tw"><table><thead><tr><th>#</th><th>BDR/SDR</th><th>Gerados</th><th>Em Call</th><th>Fechados</th></tr></thead><tbody id="bi-bdr"></tbody></table></div></div>
       </div>
       <div class="card"><div class="card-h"><div class="card-t">📊 Projeção de Faturamento</div></div><div id="bi-proj"></div></div>
+    </div>
+    <div class="vp" id="bi-perf">
+      <div class="kg g3" id="perf-kpis"></div>
+      <div id="perf-cargo-sections"></div>
     </div>
     <div class="vp" id="bi-fin">
       <div class="kg g4" id="bi-fin-kpis"></div>
@@ -472,9 +477,13 @@ tr:last-child td{border-bottom:none}
       </div>
       <button class="btn btn-p btn-sm" onclick="openM('m-lead')">+ Novo Lead</button>
     </div>
-    <div id="kb-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FILTRAR:</span>
+    <div id="kb-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">CLOSER:</span>
       <button class="btn btn-g btn-xs kb-filt on" onclick="filtrarKanban('',this)">Todos</button>
+    </div>
+    <div id="kb-cargo-filtros" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FUNIL:</span>
+      <button class="btn btn-g btn-xs kb-cargo-filt on" onclick="filtrarKanbanCargo('todos',this)">Todos</button>
     </div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
       <label style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -704,8 +713,9 @@ tr:last-child td{border-bottom:none}
         <div class="fg"><label class="fl">Origem</label><select class="fs" id="ml-ori"><option>Ligação</option><option>Indicação</option><option>Evento</option><option>Instagram</option><option>Google</option><option>LinkedIn</option><option>YouTube</option><option>Outros</option></select></div>
         <div class="fg"><label class="fl">Produto/Serviço</label><input class="fi" id="ml-prod" placeholder="Ex: Consultoria"/></div>
         <div class="fg"><label class="fl">Closer (vendedor)</label><select class="fs" id="ml-vend"><option value="">— selecione —</option></select></div>
+        <div class="fg"><label class="fl">Cargo do vendedor</label><select class="fs" id="ml-cargo" onchange="atualizarEtapasModal()"><option value="closer">Closer</option><option value="sdr">SDR</option><option value="bdr">BDR</option></select></div>
         <div class="fg"><label class="fl">BDR/SDR</label><input class="fi" id="ml-prosp" placeholder="Nome do prospectador"/></div>
-        <div class="fg"><label class="fl">Etapa</label><select class="fs" id="ml-etapa"><option value="1">Conexão</option><option value="2">Apresentação</option><option value="3">Proposta</option><option value="4">Fechamento</option><option value="5">Referido</option></select></div>
+        <div class="fg"><label class="fl">Etapa</label><select class="fs" id="ml-etapa"></select></div>
         <div class="fg"><label class="fl">Temperatura</label><select class="fs" id="ml-temp"><option value="quente">🔥 Quente</option><option value="morno">🌡 Morno</option><option value="frio">❄ Frio</option></select></div>
         <div class="fg"><label class="fl">Status</label><select class="fs" id="ml-st"><option value="ativo">● Ativo</option><option value="venda">✓ Venda</option><option value="perdido">✗ Perdido</option></select></div>
         <div class="fg"><label class="fl">Valor R$</label><input class="fi" type="number" id="ml-val" placeholder="0"/></div>
@@ -903,10 +913,17 @@ const DB=createClient(
 let EID=null;
 let leads=[],cf=[],cv=[],entradas=[],colabs=[],vagas=[],planos=[];
 let CHARTS={};
+let funilEtapas={}; // { 'sdr': [{ordem,nome,cor},...], 'bdr': [...], 'closer': [...] }
 
 // ── CONSTS ──
+// Funil padrão (fallback enquanto carrega do banco)
 const EN={1:'Conexão',2:'Apresentação',3:'Proposta',4:'Fechamento',5:'Referido'};
 const EC={1:'#00D4FF',2:'#00B8D9',3:'#FF6A2F',4:'#F5B800',5:'#10D98A'};
+// Funis por cargo
+const CARGO_LABEL={sdr:'SDR',bdr:'BDR',closer:'Closer',admin:'Admin'};
+const CARGO_ICON={sdr:'◎',bdr:'◈',closer:'◐'};
+// Etapas "final" de cada cargo (para calcular conversão)
+const ETAPA_FINAL={sdr:4,bdr:4,closer:5};
 const MEIOS={pix:'PIX',boleto:'Boleto',cartao_credito:'Cartão Créd.',cartao_debito:'Cartão Déb.',transferencia:'Transf.',dinheiro:'Dinheiro'};
 const R=n=>'R$ '+Math.round(Number(n)||0).toLocaleString('pt-BR');
 const N=n=>(Math.round(Number(n)||0)).toLocaleString('pt-BR');
@@ -922,6 +939,13 @@ function iso(v){
 function fdt(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
 function badgeSt(s){const m={venda:'sb-v ✓ Venda',perdido:'sb-p ✗ Perdido',ativo:'sb-a ● Ativo'};const r=(m[s]||m.ativo).split(' ');return`<span class="sb ${r[0]}">${r.slice(1).join(' ')}</span>`;}
 function getTax(){return parseFloat(document.getElementById('tax-rate')?.value||23)/100;}
+// Retorna etapas do cargo (do banco ou fallback)
+function getEtapasCargo(cargo){
+  const c=cargo||'closer';
+  if(funilEtapas[c]&&funilEtapas[c].length)return funilEtapas[c];
+  if(c==='sdr'||c==='bdr')return [{ordem:1,nome:'Conexão',cor:'#00D4FF'},{ordem:2,nome:'Reunião Agendada',cor:'#00F5C8'},{ordem:3,nome:'Reagendamento',cor:'#F5B800'},{ordem:4,nome:'Fechado',cor:'#10D98A'}];
+  return [{ordem:1,nome:'Conexão',cor:'#00D4FF'},{ordem:2,nome:'Apresentação',cor:'#00B8D9'},{ordem:3,nome:'DI',cor:'#8B5CF6'},{ordem:4,nome:'Proposta',cor:'#FF6A2F'},{ordem:5,nome:'Fechamento',cor:'#F5B800'},{ordem:6,nome:'Referido',cor:'#10D98A'},{ordem:7,nome:'Validação',cor:'#00F5C8'}];
+}
 
 // ── AUTH ──
 function switchAt(t,el){
@@ -979,15 +1003,24 @@ async function initApp(user){
 
 // ── LOADERS ──
 async function loadAll(){
-  await Promise.all([loadLeads(),loadCF(),loadCV(),loadEntradas(),loadColabs(),loadVagas(),loadPlanos()]);
+  await Promise.all([loadLeads(),loadCF(),loadCV(),loadEntradas(),loadColabs(),loadVagas(),loadPlanos(),loadFunilEtapas()]);
   fillLeadSelects();
+}
+async function loadFunilEtapas(){
+  const {data}=await DB.from('funil_etapas').select('*').eq('empresa_id',EID).order('cargo').order('ordem');
+  funilEtapas={};
+  (data||[]).forEach(e=>{
+    if(!funilEtapas[e.cargo])funilEtapas[e.cargo]=[];
+    funilEtapas[e.cargo].push({ordem:e.ordem,nome:e.nome,cor:e.cor});
+  });
 }
 async function loadLeads(){
   const{data}=await DB.from('leads').select('*').eq('empresa_id',EID).order('criado_em',{ascending:true});
   leads=(data||[]).map(l=>({
     id:l.id,dbId:l.id,nm:l.nome,tel:l.telefone||'',ori:l.origem||'',
     vend:l.vendedor||'',prosp:l.prospectador||'',prod:l.produto||'',
-    ord:{Conexão:1,Apresentação:2,Proposta:3,Fechamento:4,Referido:5}[l.etapa]||1,
+    cargo:l.cargo_vendedor||'closer',
+    ord:l.etapa?parseInt(l.etapa)||1:1,
     st:l.status||'ativo',tmp:l.temperatura||'',
     rec:Number(l.receita)||0,cx:l.conexao||'',obs:l.observacoes||'',
     cac:Number(l.cac)||0,ltv:Number(l.ltv)||0,
@@ -1188,8 +1221,76 @@ function dChart(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
 function renderDash(){renderBiArea('com');}
 function renderBiArea(a){
   if(a==='com')renderBiCom();
+  else if(a==='perf')renderBiPerf();
   else if(a==='fin')renderBiFin();
   else if(a==='rh')renderBiRH();
+}
+function renderBiPerf(){
+  const agora=new Date();
+  const cargos=['sdr','bdr','closer'];
+  // KPIs gerais
+  const totais={leads:leads.length,vendas:leads.filter(l=>l.st==='venda').length,rec:leads.filter(l=>l.st==='venda').reduce((s,l)=>s+l.rec,0)};
+  document.getElementById('perf-kpis').innerHTML=[
+    {l:'Total Leads',v:N(totais.leads),kc:'var(--c)'},
+    {l:'Total Vendas',v:N(totais.vendas),kc:'var(--g)'},
+    {l:'Receita Total',v:R(totais.rec),kc:'var(--y)'},
+  ].map(c=>`<div class="kpi" style="--kc:${c.kc}"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div></div>`).join('');
+
+  // Seção por cargo
+  document.getElementById('perf-cargo-sections').innerHTML=cargos.map(cargo=>{
+    const leadsC=leads.filter(l=>(l.cargo||'closer')===cargo);
+    if(!leadsC.length)return'';
+    const etapas=getEtapasCargo(cargo);
+    const vendedores=[...new Set(leadsC.map(l=>l.vend).filter(Boolean))];
+    const maxEtapa=etapas.length;
+
+    // Funil do cargo
+    const funilRows=etapas.map(et=>{
+      const n=leadsC.filter(l=>l.ord===et.ordem).length;
+      const pct=leadsC.length>0?Math.round((n/leadsC.length)*100):0;
+      return`<div class="fn-row"><div class="fn-lbl" style="width:130px">${et.nome}</div><div class="fn-tr"><div class="fn-bar" style="width:${n>0?Math.max(pct,4):0}%;background:${et.cor}"><span class="fn-txt">${n>0?n:''}</span></div></div><div class="fn-n">${pct}%</div></div>`;
+    }).join('');
+
+    // Tabela por vendedor
+    const vendRows=vendedores.map(v=>{
+      const lv=leadsC.filter(l=>l.vend===v);
+      const vendas=lv.filter(l=>l.st==='venda');
+      const perdidos=lv.filter(l=>l.st==='perdido');
+      const ativos=lv.filter(l=>l.st==='ativo');
+      const conv=lv.length>0?Math.round((vendas.length/lv.length)*100):0;
+      const rec=vendas.reduce((s,l)=>s+l.rec,0);
+      // Avança no funil: % chegou na última etapa ativa
+      const naUltima=lv.filter(l=>l.ord===maxEtapa).length;
+      const avanco=lv.length>0?Math.round((naUltima/lv.length)*100):0;
+      // Meta do mês
+      return`<tr>
+        <td class="td-m">${v}</td>
+        <td style="font-family:var(--f-mono)">${lv.length}</td>
+        <td style="color:var(--g);font-weight:600">${vendas.length}</td>
+        <td style="color:var(--r)">${perdidos.length}</td>
+        <td style="color:var(--c)">${ativos.length}</td>
+        <td style="font-family:var(--f-mono);color:${conv>=30?'var(--g)':conv>=15?'var(--y)':'var(--r)'}">${conv}%</td>
+        <td style="font-family:var(--f-mono);color:var(--c)">${R(rec)}</td>
+        <td style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">${avanco}%</td>
+      </tr>`;
+    }).join('');
+
+    return`<div class="card" style="margin-bottom:16px">
+      <div class="card-h">
+        <div class="card-t">${CARGO_ICON[cargo]||''} ${CARGO_LABEL[cargo]} <span class="badge">${leadsC.length} leads · ${vendedores.length} vendedores</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:2px;color:var(--t3);margin-bottom:10px">FUNIL</div>
+          ${funilRows}
+        </div>
+        <div>
+          <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:2px;color:var(--t3);margin-bottom:10px">PERFORMANCE POR VENDEDOR</div>
+          <div class="tw"><table><thead><tr><th>Nome</th><th>Leads</th><th>Vendas</th><th>Perdidos</th><th>Ativos</th><th>Conv%</th><th>Receita</th><th>Avanço%</th></tr></thead><tbody>${vendRows||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:12px">Nenhum lead ainda</td></tr>'}</tbody></table></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function renderBiCom(){
   const ls=PL;const s=stats(ls);
@@ -1261,42 +1362,95 @@ function dreRows(rows){return rows.map(r=>{if(r.sep)return`<div class="fin-sec">
 
 // ═════════════ KANBAN ═════════════
 let _kbFiltro='';
+let _kbCargo='todos'; // 'todos','sdr','bdr','closer'
 function filtrarKanban(vend,el){
   _kbFiltro=vend;
   document.querySelectorAll('.kb-filt').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
   renderKanban();
 }
+function filtrarKanbanCargo(cargo,el){
+  _kbCargo=cargo;
+  document.querySelectorAll('.kb-cargo-filt').forEach(b=>b.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderKanban();
+}
 function renderKanban(){
-  // Reconstrói botões de filtro
+  // Botões de filtro por vendedor
   const fb=document.getElementById('kb-filtros');
   if(fb){
     const vendedores=[...new Set(leads.map(l=>l.vend).filter(Boolean))].sort();
-    fb.innerHTML=`<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FILTRAR:</span>
+    fb.innerHTML=`<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">CLOSER:</span>
       <button class="btn btn-g btn-xs kb-filt${_kbFiltro===''?' on':''}" onclick="filtrarKanban('',this)">Todos</button>
       ${vendedores.map(v=>`<button class="btn btn-g btn-xs kb-filt${_kbFiltro===v?' on':''}" onclick="filtrarKanban('${v}',this)">${v}</button>`).join('')}`;
   }
+  // Botões de filtro por cargo
+  const fc=document.getElementById('kb-cargo-filtros');
+  if(fc){
+    const cargos=[...new Set(leads.map(l=>l.cargo).filter(Boolean))].sort();
+    fc.innerHTML=`<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3);letter-spacing:1px;margin-right:4px">FUNIL:</span>
+      <button class="btn btn-g btn-xs kb-cargo-filt${_kbCargo==='todos'?' on':''}" onclick="filtrarKanbanCargo('todos',this)">Todos</button>
+      ${['sdr','bdr','closer'].filter(c=>cargos.includes(c)||c==='closer').map(c=>`<button class="btn btn-g btn-xs kb-cargo-filt${_kbCargo===c?' on':''}" onclick="filtrarKanbanCargo('${c}',this)">${CARGO_LABEL[c]||c}</button>`).join('')}`;
+  }
+
   const alerta=document.getElementById('kb-alerta')?.checked;
   const dias=parseInt(document.getElementById('kb-dias')?.value)||3;
   const agora=new Date();
-  const filtrados=_kbFiltro?leads.filter(l=>l.vend===_kbFiltro):leads;
-  document.getElementById('kb-wrap').innerHTML=[1,2,3,4,5].map(e=>{
-    const items=filtrados.filter(l=>l.ord===e);
-    return`<div class="kb-col"><div class="kb-hd" style="--kc:${EC[e]}"><div class="kb-title">${EN[e]}</div><div class="kb-cnt">${items.length}</div></div><div class="kb-body">${items.map(l=>{
+
+  // Filtra leads
+  let filtrados=leads;
+  if(_kbFiltro)filtrados=filtrados.filter(l=>l.vend===_kbFiltro);
+  if(_kbCargo!=='todos')filtrados=filtrados.filter(l=>(l.cargo||'closer')===_kbCargo);
+
+  // Determina quais etapas mostrar
+  const cargoAtivo=_kbCargo==='todos'?'closer':_kbCargo;
+  const etapas=getEtapasCargo(cargoAtivo);
+
+  // Se todos os cargos, agrupa por cargo e mostra um board por cargo
+  if(_kbCargo==='todos'){
+    const cargosPresentes=[...new Set(filtrados.map(l=>l.cargo||'closer'))];
+    document.getElementById('kb-wrap').innerHTML=cargosPresentes.map(cargo=>{
+      const ets=getEtapasCargo(cargo);
+      const leadsC=filtrados.filter(l=>(l.cargo||'closer')===cargo);
+      return `<div style="width:100%;margin-bottom:24px">
+        <div style="font-family:var(--f-mono);font-size:10px;letter-spacing:2px;color:var(--t2);margin-bottom:10px;text-transform:uppercase">${CARGO_LABEL[cargo]||cargo} · ${leadsC.length} leads</div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+          ${ets.map(et=>{
+            const items=leadsC.filter(l=>l.ord===et.ordem);
+            return renderKanbanCol(et,items,alerta,dias,agora,ets.length);
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('') || '<div class="empty"><div class="empty-ic">⊞</div><div class="empty-tx">Nenhum lead no funil</div></div>';
+  } else {
+    document.getElementById('kb-wrap').innerHTML=`<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;width:100%">${
+      etapas.map(et=>{
+        const items=filtrados.filter(l=>l.ord===et.ordem);
+        return renderKanbanCol(et,items,alerta,dias,agora,etapas.length);
+      }).join('')
+    }</div>`;
+  }
+}
+function renderKanbanCol(et,items,alerta,dias,agora,totalEtapas){
+  return`<div class="kb-col" style="min-width:${totalEtapas>5?'180px':'210px'}">
+    <div class="kb-hd" style="--kc:${et.cor}"><div class="kb-title">${et.nome}</div><div class="kb-cnt">${items.length}</div></div>
+    <div class="kb-body">${items.map(l=>{
       let diasParado=0;
       if(alerta&&l.cx){const d=new Date(l.cx+'T12:00:00');diasParado=Math.floor((agora-d)/(1000*60*60*24));}
       const parado=alerta&&diasParado>=dias&&l.st==='ativo';
+      const etapasL=getEtapasCargo(l.cargo||'closer');
+      const maxOrd=etapasL.length;
       return`<div class="kb-card" style="${parado?'border-color:var(--o);border-width:1.5px':''}">
         ${parado?`<div style="font-family:var(--f-mono);font-size:9px;color:var(--o);margin-bottom:5px;letter-spacing:1px">⏱ ${diasParado}d PARADO</div>`:''}
         <div class="kb-nm">${l.nm}</div>
         <div class="kb-meta"><span class="tdot t${l.tmp?l.tmp[0]:'-'}"></span><span>${l.tmp||'—'}</span>${badgeSt(l.st)}</div>
-        ${l.vend?`<div style="font-size:10px;color:var(--t2);font-family:var(--f-mono);margin-top:3px">↳ ${l.vend}</div>`:''}
+        ${l.vend?`<div style="font-size:10px;color:var(--t2);font-family:var(--f-mono);margin-top:3px">↳ ${l.vend} <span style="opacity:.5">(${CARGO_LABEL[l.cargo||'closer']||''})</span></div>`:''}
         ${l.rec>0?`<div style="font-family:var(--f-mono);font-size:11px;color:var(--g);margin-top:4px">${R(l.rec)}</div>`:''}
         <div class="kb-acts">
-          ${e>1?`<button class="btn btn-g btn-xs" onclick="mvKanban(${l.dbId},-1)">←</button>`:''}
+          ${l.ord>1?`<button class="btn btn-g btn-xs" onclick="mvKanban(${l.dbId},-1)">←</button>`:''}
           <button class="btn btn-g btn-xs" onclick="editLead(${l.dbId})">✎</button>
           <button class="btn btn-g btn-xs" onclick="abrirTimeline(${l.dbId},'${l.nm.replace(/'/g,"\\'")}')">📋</button>
-          ${e<5?`<button class="btn btn-p btn-xs" onclick="mvKanban(${l.dbId},1)">→</button>`:''}
+          ${l.ord<maxOrd?`<button class="btn btn-p btn-xs" onclick="mvKanban(${l.dbId},1)">→</button>`:''}
           <select class="es" style="flex:1;font-size:10px" onchange="updLead(${l.dbId},'st',this.value)">
             <option value="ativo"${l.st==='ativo'?' selected':''}>● Ativo</option>
             <option value="venda"${l.st==='venda'?' selected':''}>✓ Venda</option>
@@ -1305,19 +1459,20 @@ function renderKanban(){
         </div>
       </div>`;
     }).join('')}</div></div>`;
-  }).join('');
 }
 function mvKanban(id,dir){
   const l=leads.find(l=>l.dbId===id);if(!l)return;
-  const n=l.ord+dir;if(n<1||n>5)return;
-  const nomeAntes=EN[l.ord];
+  const etapas=getEtapasCargo(l.cargo||'closer');
+  const maxOrd=etapas.length;
+  const n=l.ord+dir;if(n<1||n>maxOrd)return;
+  const nomeAntes=(etapas.find(e=>e.ordem===l.ord)||{nome:'?'}).nome;
+  const nomeDepois=(etapas.find(e=>e.ordem===n)||{nome:'?'}).nome;
   l.ord=n;
   saveLeadDB(l);
-  // Registra movimentação como atividade automática
   const usuario=VENDEDOR_SESSAO?.nome||(document.getElementById('u-nm')?.textContent||'');
   DB.from('lead_atividades').insert({empresa_id:EID,lead_id:id,tipo:'sistema',
-    descricao:`Movido de "${nomeAntes}" para "${EN[n]}"`,usuario});
-  toast(`✓ ${l.nm} → ${EN[n]}`);renderKanban();onPeriod();
+    descricao:`Movido de "${nomeAntes}" para "${nomeDepois}"`,usuario});
+  toast(`✓ ${l.nm} → ${nomeDepois}`);renderKanban();onPeriod();
 }
 
 // ═════════════ LEADS TABLE ═════════════
@@ -1359,6 +1514,8 @@ function editLead(id){
   document.getElementById('ml-id').value=id;
   document.getElementById('ml-title').textContent='Editar Lead';
   fillLeadSelects();
+  const cargEl=document.getElementById('ml-cargo');
+  if(cargEl){cargEl.value=l.cargo||'closer';atualizarEtapasModal();}
   document.getElementById('ml-vend').value=l.vend||'';
   document.getElementById('ml-nm').value=l.nm;
   document.getElementById('ml-tel').value=l.tel;
@@ -1383,13 +1540,15 @@ function editLead(id){
 
 // ── saveLeadDB ──
 async function saveLeadDB(lead){
-  const em={1:'Conexão',2:'Apresentação',3:'Proposta',4:'Fechamento',5:'Referido'};
+  const etapas=getEtapasCargo(lead.cargo||'closer');
+  const etapaNome=(etapas.find(e=>e.ordem===lead.ord)||etapas[0]||{nome:'Conexão'}).nome;
   const p={empresa_id:EID,nome:lead.nm,telefone:lead.tel||null,origem:lead.ori||null,
     vendedor:lead.vend||null,prospectador:lead.prosp||null,produto:lead.prod||null,
-    etapa:em[lead.ord]||'Conexão',status:lead.st||'ativo',temperatura:lead.tmp||null,
+    etapa:String(lead.ord||1),status:lead.st||'ativo',temperatura:lead.tmp||null,
     receita:Number(lead.rec)||0,conexao:iso(lead.cx),observacoes:lead.obs||null,
     cac:Number(lead.cac)||0,meses_contrato:Number(lead.meses)||1,ticket_recorrente:lead.recorr||false,
     meio_pagamento:lead.meio||'pix',parcelas:Number(lead.parc)||1,taxa_percentual:Number(lead.taxa)||0,
+    cargo_vendedor:lead.cargo||'closer',
     atualizado_em:new Date().toISOString()};
   if(lead.dbId&&typeof lead.dbId==='number'){
     const{error}=await DB.from('leads').update(p).eq('id',lead.dbId);
@@ -1642,10 +1801,10 @@ async function saveLead(){
   const nm=document.getElementById('ml-nm').value.trim();
   if(!nm){alert('Nome obrigatório');return;}
   const editId=document.getElementById('ml-id').value;
-  // Se vendedor logado, força o nome dele no campo closer
   const vendNome = VENDEDOR_SESSAO ? VENDEDOR_SESSAO.nome : (document.getElementById('ml-vend').value||'');
+  const vendCargo = VENDEDOR_SESSAO ? (VENDEDOR_SESSAO.cargo||'closer') : (document.getElementById('ml-cargo').value||'closer');
   const lead={nm,tel:document.getElementById('ml-tel').value,ori:document.getElementById('ml-ori').value,
-    vend:vendNome,prosp:document.getElementById('ml-prosp').value||'',
+    vend:vendNome,prosp:document.getElementById('ml-prosp').value||'',cargo:vendCargo,
     prod:document.getElementById('ml-prod').value,ord:+document.getElementById('ml-etapa').value,
     st:document.getElementById('ml-st').value,tmp:document.getElementById('ml-temp').value,
     rec:+document.getElementById('ml-val').value||0,cx:document.getElementById('ml-data').value||td(),
@@ -1672,6 +1831,7 @@ async function saveLead(){
 function clearLeadModal(){
   ['ml-nm','ml-tel','ml-prod','ml-prosp','ml-val','ml-obs','ml-data','ml-cac','ml-d1p','ml-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const mlVend=document.getElementById('ml-vend');if(mlVend){mlVend.value='';mlVend.readOnly=false;mlVend.style.opacity='';}
+  const mlCargo=document.getElementById('ml-cargo');if(mlCargo){mlCargo.value='closer';mlCargo.disabled=false;mlCargo.style.opacity='';atualizarEtapasModal();}
   document.getElementById('ml-meses').value='1';document.getElementById('ml-parc').value='1';
   document.getElementById('ml-taxa').value='';document.getElementById('ml-title').textContent='+ Novo Lead';
 }
@@ -1783,10 +1943,14 @@ async function delEnt(id){if(!confirm('Remover?'))return;await DB.from('financei
 // UTILS
 function openM(id){
   if(id==='m-ce'||id==='m-cv'||id==='m-entrada')fillLeadSelects();
-  // Pré-preenche e bloqueia campo closer quando vendedor logado
-  if(id==='m-lead' && VENDEDOR_SESSAO){
-    const vf = document.getElementById('ml-vend');
-    if(vf){ vf.value = VENDEDOR_SESSAO.nome; vf.readOnly = true; vf.style.opacity = '.6'; }
+  if(id==='m-lead'){
+    atualizarEtapasModal();
+    if(VENDEDOR_SESSAO){
+      const vf=document.getElementById('ml-vend');
+      if(vf){vf.value=VENDEDOR_SESSAO.nome;vf.readOnly=true;vf.style.opacity='.6';}
+      const cf=document.getElementById('ml-cargo');
+      if(cf){cf.value=VENDEDOR_SESSAO.cargo||'closer';cf.disabled=true;cf.style.opacity='.6';atualizarEtapasModal();}
+    }
   }
   document.getElementById(id)?.classList.add('on');
 }
@@ -1806,8 +1970,8 @@ async function doLoginVendedor(){
   const {data, error} = await DB.from('usuarios').select('*')
     .eq('email', em).eq('senha', pw).eq('perfil', 'comercial').eq('ativo', true).single();
   if(error || !data){ err.textContent = 'E-mail ou senha incorretos.'; return; }
-  VENDEDOR_SESSAO = data;
-  sessionStorage.setItem('dp_vend', JSON.stringify(data));
+  VENDEDOR_SESSAO = {...data, cargo: data.cargo||'closer'};
+  sessionStorage.setItem('dp_vend', JSON.stringify(VENDEDOR_SESSAO));
   await initVendedor(data);
 }
 
@@ -1821,13 +1985,15 @@ async function initVendedor(vend){
   if(emp.logo_url) document.getElementById('sb-co').innerHTML = `<img src="${emp.logo_url}" style="max-height:24px;max-width:160px;object-fit:contain;margin-top:3px"/>`;
   document.getElementById('u-av').textContent = vend.nome.slice(0,2).toUpperCase();
   document.getElementById('u-nm').textContent = vend.nome;
-  document.getElementById('u-rl').textContent = 'vendedor · comercial';
+  document.getElementById('u-rl').textContent = `${CARGO_LABEL[vend.cargo||'closer']||'vendedor'} · comercial`;
   document.querySelectorAll('.sb-only-admin').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.sb-only-vend').forEach(el => el.style.display = '');
-  await Promise.all([loadLeads(), loadColabs()]);
+  await Promise.all([loadLeads(), loadColabs(), loadFunilEtapas()]);
   fillLeadSelects();
   setDefaultDates();
   const nomeVend = vend.nome;
+  const cargoVend = vend.cargo||'closer';
+  // Filtro: vendedor vê seus próprios leads E apenas do seu cargo
   leads = leads.filter(l => (l.vend||'').toLowerCase() === nomeVend.toLowerCase());
   const psel = document.getElementById('gPer');
   if(psel) psel.style.display = 'none';
@@ -2000,6 +2166,14 @@ window.addEventListener('load',()=>{
           <input class="fi" type="text" id="mv-senha" placeholder="Defina uma senha"/>
         </div>
         <div class="fg">
+          <label class="fl">Cargo / Função</label>
+          <select class="fs" id="mv-cargo">
+            <option value="closer">Closer — fecha vendas</option>
+            <option value="sdr">SDR — recebe e qualifica leads</option>
+            <option value="bdr">BDR — prospecta e qualifica leads</option>
+          </select>
+        </div>
+        <div class="fg">
           <label class="fl">Status</label>
           <select class="fs" id="mv-ativo">
             <option value="true">✓ Ativo</option>
@@ -2123,55 +2297,55 @@ async function salvarMeta(vendedorId, vendedorNome, metaId, mes, ano){
   await renderEquipe();
 }
 
+function atualizarEtapasModal(){
+  const cargo=document.getElementById('ml-cargo')?.value||'closer';
+  const etapas=getEtapasCargo(cargo);
+  const sel=document.getElementById('ml-etapa');
+  if(sel)sel.innerHTML=etapas.map(e=>`<option value="${e.ordem}">${e.nome}</option>`).join('');
+}
+
 function abrirModalVendedor(){
-  document.getElementById('mv-id').value = '';
-  document.getElementById('mv-title').textContent = '+ Adicionar Vendedor';
-  document.getElementById('mv-nome').value = '';
-  document.getElementById('mv-email').value = '';
-  document.getElementById('mv-senha').value = '';
-  document.getElementById('mv-ativo').value = 'true';
+  document.getElementById('mv-id').value='';
+  document.getElementById('mv-title').textContent='+ Adicionar Vendedor';
+  document.getElementById('mv-nome').value='';
+  document.getElementById('mv-email').value='';
+  document.getElementById('mv-senha').value='';
+  document.getElementById('mv-cargo').value='closer';
+  document.getElementById('mv-ativo').value='true';
   openM('m-vendedor');
 }
 
 function editarVendedor(id){
-  const v = equipeVendedores.find(x => x.id === id);
-  if(!v) return;
-  document.getElementById('mv-id').value = v.id;
-  document.getElementById('mv-title').textContent = 'Editar Vendedor';
-  document.getElementById('mv-nome').value = v.nome;
-  document.getElementById('mv-email').value = v.email;
-  document.getElementById('mv-senha').value = v.senha || '';
-  document.getElementById('mv-ativo').value = String(v.ativo);
+  const v=equipeVendedores.find(x=>x.id===id);
+  if(!v)return;
+  document.getElementById('mv-id').value=v.id;
+  document.getElementById('mv-title').textContent='Editar Vendedor';
+  document.getElementById('mv-nome').value=v.nome;
+  document.getElementById('mv-email').value=v.email;
+  document.getElementById('mv-senha').value=v.senha||'';
+  document.getElementById('mv-cargo').value=v.cargo||'closer';
+  document.getElementById('mv-ativo').value=String(v.ativo);
   openM('m-vendedor');
 }
 
 async function salvarVendedor(){
-  const id    = document.getElementById('mv-id').value;
-  const nome  = document.getElementById('mv-nome').value.trim();
-  const email = document.getElementById('mv-email').value.trim().toLowerCase();
-  const senha = document.getElementById('mv-senha').value.trim();
-  const ativo = document.getElementById('mv-ativo').value === 'true';
-
-  if(!nome || !email || !senha){ toast('Preencha nome, e-mail e senha.','err'); return; }
-
-  const payload = { empresa_id: EID, nome, email, senha, perfil: 'comercial', ativo };
-
+  const id=document.getElementById('mv-id').value;
+  const nome=document.getElementById('mv-nome').value.trim();
+  const email=document.getElementById('mv-email').value.trim().toLowerCase();
+  const senha=document.getElementById('mv-senha').value.trim();
+  const cargo=document.getElementById('mv-cargo').value;
+  const ativo=document.getElementById('mv-ativo').value==='true';
+  if(!nome||!email||!senha){toast('Preencha nome, e-mail e senha.','err');return;}
+  const payload={empresa_id:EID,nome,email,senha,perfil:'comercial',cargo,ativo};
   if(id){
-    // Edição
-    const {error} = await DB.from('usuarios').update(payload).eq('id', id);
-    if(error){ toast('Erro ao salvar: ' + error.message,'err'); return; }
+    const{error}=await DB.from('usuarios').update(payload).eq('id',id);
+    if(error){toast('Erro ao salvar: '+error.message,'err');return;}
     toast('✓ Acesso atualizado com sucesso!');
   } else {
-    // Novo
-    const {error} = await DB.from('usuarios').insert(payload);
-    if(error){
-      if(error.code === '23505') toast('E-mail já cadastrado.','err');
-      else toast('Erro: ' + error.message,'err');
-      return;
-    }
+    const{error}=await DB.from('usuarios').insert(payload);
+    if(error){if(error.code==='23505')toast('E-mail já cadastrado.','err');else toast('Erro: '+error.message,'err');return;}
     toast('✓ Vendedor adicionado! Já pode acessar o portal.');
   }
-
   closeM('m-vendedor');
   await loadColabs();
   await renderEquipe();
