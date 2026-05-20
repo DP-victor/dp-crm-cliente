@@ -1745,13 +1745,54 @@ function renderRH(){renderColabs();}
 function calcTp(a){if(!a)return'—';const d=Date.now()-new Date(a+'T12:00:00').getTime();const an=Math.floor(d/(1000*60*60*24*365));const m=Math.floor((d%(1000*60*60*24*365))/(1000*60*60*24*30));return an>0?`${an}a ${m}m`:m>0?`${m}m`:'< 1m';}
 function renderColabs(){
   const q=(document.getElementById('rh-srch')?.value||'').toLowerCase();
-  const at=colabs.filter(c=>c.status==='ativo');
-  const fo=at.reduce((s,c)=>s+Number(c.salario),0);
+  const at=colabs.filter(function(c){return c.status==='ativo';});
+  const fo=at.reduce(function(s,c){return s+Number(c.salario);},0);
   document.getElementById('rh-kpis').innerHTML=[
     {l:'Colaboradores',v:at.length,kc:'var(--c)'},{l:'Folha Mensal',v:R(fo),kc:'var(--o)'},{l:'Média Salarial',v:at.length>0?R(fo/at.length):'—',kc:'var(--g)'},
-  ].map(c=>`<div class="kpi" style="--kc:${c.kc}"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div></div>`).join('');
-  const f=colabs.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.cargo||'').toLowerCase().includes(q));
-  document.getElementById('rh-lista').innerHTML=f.length?f.map(c=>`<div class="colab-card"><div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">${c.foto_url?`<img src="${c.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--c);flex-shrink:0">`:`<div class="cav">${c.nome.slice(0,2).toUpperCase()}</div>`}<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px"><div class="cnm">${c.nome}</div><span class="sb ${c.status==='ativo'?'sb-v':'sb-p'}">${c.status==='ativo'?'● Ativo':'○ Inativo'}</span></div><div class="ccg">${c.cargo||'—'}</div><div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap"><div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">SALÁRIO</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--g)">${R(c.salario)}</div></div><div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMPRESA</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--tx)">${calcTp(c.admissao)}</div></div>${c.email?`<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMAIL</div><div style="font-size:11px;color:var(--t2)">${c.email}</div></div>`:''}</div>${c.pontos_fortes?`<div style="margin-top:8px;background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--g);letter-spacing:1px;margin-bottom:3px">PONTOS FORTES</div><div style="font-size:11px;color:var(--t2);line-height:1.6">${c.pontos_fortes}</div></div>`:''}${c.oportunidades_melhoria?`<div style="margin-top:6px;background:rgba(245,184,0,.06);border:1px solid rgba(245,184,0,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--y);letter-spacing:1px;margin-bottom:3px">OPORTUNIDADES DE MELHORIA</div><div style="font-size:11px;color:var(--t2);line-height:1.6">${c.oportunidades_melhoria}</div></div>`:''}</div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-g btn-xs" onclick="editColab('${c.id}')">editar</button><button class="btn btn-g btn-xs" onclick="abrirFB('${c.id}')">feedback</button><button class="btn btn-r btn-xs" onclick="delColab('${c.id}')">✕</button></div></div></div>`).join(''):'<div class="empty"><div class="empty-ic">⊛</div><div class="empty-tx">Nenhum colaborador</div></div>';
+  ].map(function(c){return '<div class="kpi" style="--kc:'+c.kc+'"><div class="kpi-lbl">'+c.l+'</div><div class="kpi-val">'+c.v+'</div></div>';}).join('');
+  const f=colabs.filter(function(c){return !q||c.nome.toLowerCase().includes(q)||(c.cargo||'').toLowerCase().includes(q);});
+  if(!f.length){
+    document.getElementById('rh-lista').innerHTML='<div class="empty"><div class="empty-ic">⊛</div><div class="empty-tx">Nenhum colaborador</div></div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<f.length;i++){
+    var c=f[i];
+    var cid=c.id;
+    var avatar=c.foto_url
+      ?'<img src="'+c.foto_url+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--c);flex-shrink:0">'
+      :'<div class="cav">'+c.nome.slice(0,2).toUpperCase()+'</div>';
+    var statusCls=c.status==='ativo'?'sb-v':'sb-p';
+    var statusTxt=c.status==='ativo'?'● Ativo':'○ Inativo';
+    var emailHtml=c.email?'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMAIL</div><div style="font-size:11px;color:var(--t2)">'+c.email+'</div></div>':'';
+    var ptHtml=c.pontos_fortes?'<div style="margin-top:8px;background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--g);letter-spacing:1px;margin-bottom:3px">PONTOS FORTES</div><div style="font-size:11px;color:var(--t2);line-height:1.6">'+c.pontos_fortes+'</div></div>':'';
+    var opHtml=c.oportunidades_melhoria?'<div style="margin-top:6px;background:rgba(245,184,0,.06);border:1px solid rgba(245,184,0,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--y);letter-spacing:1px;margin-bottom:3px">OPORTUNIDADES DE MELHORIA</div><div style="font-size:11px;color:var(--t2);line-height:1.6">'+c.oportunidades_melhoria+'</div></div>':'';
+    html+='<div class="colab-card">'
+      +'<div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">'
+      +avatar
+      +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">'
+          +'<div class="cnm">'+c.nome+'</div>'
+          +'<span class="sb '+statusCls+'">'+statusTxt+'</span>'
+        +'</div>'
+        +'<div class="ccg">'+(c.cargo||'—')+'</div>'
+        +'<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">'
+          +'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">SALÁRIO</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--g)">'+R(c.salario)+'</div></div>'
+          +'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMPRESA</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--tx)">'+calcTp(c.admissao)+'</div></div>'
+          +emailHtml
+        +'</div>'
+        +ptHtml
+        +opHtml
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px">'
+        +'<button class="btn btn-g btn-xs" onclick="editColab(\''+cid+'\')">editar</button>'
+        +'<button class="btn btn-g btn-xs" onclick="abrirFB(\''+cid+'\')">feedback</button>'
+        +'<button class="btn btn-r btn-xs" onclick="delColab(\''+cid+'\')">✕</button>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }
+  document.getElementById('rh-lista').innerHTML=html;
 }
 function renderAval(){
   document.getElementById('aval-lista').innerHTML=colabs.length?colabs.map(c=>{
