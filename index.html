@@ -1745,54 +1745,13 @@ function renderRH(){renderColabs();}
 function calcTp(a){if(!a)return'—';const d=Date.now()-new Date(a+'T12:00:00').getTime();const an=Math.floor(d/(1000*60*60*24*365));const m=Math.floor((d%(1000*60*60*24*365))/(1000*60*60*24*30));return an>0?`${an}a ${m}m`:m>0?`${m}m`:'< 1m';}
 function renderColabs(){
   const q=(document.getElementById('rh-srch')?.value||'').toLowerCase();
-  const at=colabs.filter(function(c){return c.status==='ativo';});
-  const fo=at.reduce(function(s,c){return s+Number(c.salario);},0);
+  const at=colabs.filter(c=>c.status==='ativo');
+  const fo=at.reduce((s,c)=>s+Number(c.salario),0);
   document.getElementById('rh-kpis').innerHTML=[
     {l:'Colaboradores',v:at.length,kc:'var(--c)'},{l:'Folha Mensal',v:R(fo),kc:'var(--o)'},{l:'Média Salarial',v:at.length>0?R(fo/at.length):'—',kc:'var(--g)'},
-  ].map(function(c){return '<div class="kpi" style="--kc:'+c.kc+'"><div class="kpi-lbl">'+c.l+'</div><div class="kpi-val">'+c.v+'</div></div>';}).join('');
-  const f=colabs.filter(function(c){return !q||c.nome.toLowerCase().includes(q)||(c.cargo||'').toLowerCase().includes(q);});
-  if(!f.length){
-    document.getElementById('rh-lista').innerHTML='<div class="empty"><div class="empty-ic">⊛</div><div class="empty-tx">Nenhum colaborador</div></div>';
-    return;
-  }
-  var html='';
-  for(var i=0;i<f.length;i++){
-    var c=f[i];
-    var cid=c.id;
-    var avatar=c.foto_url
-      ?'<img src="'+c.foto_url+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--c);flex-shrink:0">'
-      :'<div class="cav">'+c.nome.slice(0,2).toUpperCase()+'</div>';
-    var statusCls=c.status==='ativo'?'sb-v':'sb-p';
-    var statusTxt=c.status==='ativo'?'● Ativo':'○ Inativo';
-    var emailHtml=c.email?'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMAIL</div><div style="font-size:11px;color:var(--t2)">'+c.email+'</div></div>':'';
-    var ptHtml=c.pontos_fortes?'<div style="margin-top:8px;background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--g);letter-spacing:1px;margin-bottom:3px">PONTOS FORTES</div><div style="font-size:11px;color:var(--t2);line-height:1.6">'+c.pontos_fortes+'</div></div>':'';
-    var opHtml=c.oportunidades_melhoria?'<div style="margin-top:6px;background:rgba(245,184,0,.06);border:1px solid rgba(245,184,0,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--y);letter-spacing:1px;margin-bottom:3px">OPORTUNIDADES DE MELHORIA</div><div style="font-size:11px;color:var(--t2);line-height:1.6">'+c.oportunidades_melhoria+'</div></div>':'';
-    html+='<div class="colab-card">'
-      +'<div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">'
-      +avatar
-      +'<div style="flex:1">'
-        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">'
-          +'<div class="cnm">'+c.nome+'</div>'
-          +'<span class="sb '+statusCls+'">'+statusTxt+'</span>'
-        +'</div>'
-        +'<div class="ccg">'+(c.cargo||'—')+'</div>'
-        +'<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">'
-          +'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">SALÁRIO</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--g)">'+R(c.salario)+'</div></div>'
-          +'<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMPRESA</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--tx)">'+calcTp(c.admissao)+'</div></div>'
-          +emailHtml
-        +'</div>'
-        +ptHtml
-        +opHtml
-      +'</div>'
-      +'<div style="display:flex;flex-direction:column;gap:4px">'
-        +'<button class="btn btn-g btn-xs" onclick="editColab(\''+cid+'\')">editar</button>'
-        +'<button class="btn btn-g btn-xs" onclick="abrirFB(\''+cid+'\')">feedback</button>'
-        +'<button class="btn btn-r btn-xs" onclick="delColab(\''+cid+'\')">✕</button>'
-      +'</div>'
-      +'</div>'
-      +'</div>';
-  }
-  document.getElementById('rh-lista').innerHTML=html;
+  ].map(c=>`<div class="kpi" style="--kc:${c.kc}"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div></div>`).join('');
+  const f=colabs.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.cargo||'').toLowerCase().includes(q));
+  document.getElementById('rh-lista').innerHTML=f.length?f.map(c=>`<div class="colab-card"><div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">${c.foto_url?`<img src="${c.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--c);flex-shrink:0">`:`<div class="cav">${c.nome.slice(0,2).toUpperCase()}</div>`}<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px"><div class="cnm">${c.nome}</div><span class="sb ${c.status==='ativo'?'sb-v':'sb-p'}">${c.status==='ativo'?'● Ativo':'○ Inativo'}</span></div><div class="ccg">${c.cargo||'—'}</div><div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap"><div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">SALÁRIO</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--g)">${R(c.salario)}</div></div><div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMPRESA</div><div style="font-family:var(--f-mono);font-size:12px;color:var(--tx)">${calcTp(c.admissao)}</div></div>${c.email?`<div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">EMAIL</div><div style="font-size:11px;color:var(--t2)">${c.email}</div></div>`:''}</div>${c.pontos_fortes?`<div style="margin-top:8px;background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--g);letter-spacing:1px;margin-bottom:3px">PONTOS FORTES</div><div style="font-size:11px;color:var(--t2);line-height:1.6">${c.pontos_fortes}</div></div>`:''}${c.oportunidades_melhoria?`<div style="margin-top:6px;background:rgba(245,184,0,.06);border:1px solid rgba(245,184,0,.12);border-radius:7px;padding:9px 11px"><div style="font-family:var(--f-mono);font-size:9px;color:var(--y);letter-spacing:1px;margin-bottom:3px">OPORTUNIDADES DE MELHORIA</div><div style="font-size:11px;color:var(--t2);line-height:1.6">${c.oportunidades_melhoria}</div></div>`:''}</div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-g btn-xs" onclick="editColab('${c.id}')">editar</button><button class="btn btn-g btn-xs" onclick="abrirFB('${c.id}')">feedback</button><button class="btn btn-r btn-xs" onclick="delColab('${c.id}')">✕</button></div></div></div>`).join(''):'<div class="empty"><div class="empty-ic">⊛</div><div class="empty-tx">Nenhum colaborador</div></div>';
 }
 function renderAval(){
   document.getElementById('aval-lista').innerHTML=colabs.length?colabs.map(c=>{
@@ -2282,59 +2241,123 @@ async function renderEquipe(){
   }
 
   const mesNome=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mes-1];
-  lista.innerHTML=equipeVendedores.map(v=>{
-    const m=metaMap[v.nome];
-    const metaVal=m?Number(m.meta_valor):0;
-    const metaId=m?m.id:null;
-    const rec=recMap[v.nome]||0;
-    const pct=metaVal>0?Math.min(Math.round((rec/metaVal)*100),100):0;
-    const barColor=pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)';
-    return `
-    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--c2));display:flex;align-items:center;justify-content:center;font-family:var(--f-title);font-size:13px;font-weight:800;color:#000;flex-shrink:0">${v.nome.slice(0,2).toUpperCase()}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px">${v.nome}</div>
-          <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">${v.email}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span class="sb ${v.ativo?'sb-v':'sb-p'}">${v.ativo?'✓ Ativo':'✗ Inativo'}</span>
-          <button class="btn btn-g btn-xs" onclick="editarVendedor('${v.id}')">✎ Editar</button>
-          <button class="btn btn-r btn-xs" onclick="removerVendedor('${v.id}','${v.nome}')">✕</button>
-        </div>
-      </div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-          <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">META ${mesNome.toUpperCase()}/${ano}</span>
-          <input class="fi-inp" type="number" id="meta-inp-${v.id}" value="${metaVal}" min="0" step="1000" style="width:140px;text-align:left" placeholder="R$ 0"/>
-          <button class="btn btn-p btn-xs" onclick="salvarMeta('${v.id}','${v.nome}','${metaId||''}',${mes},${ano})">Salvar meta</button>
-        </div>
-        ${metaVal>0?`
-        <div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono)">
-          <span>${R(rec)} de ${R(metaVal)}</span>
-          <span style="color:${barColor};font-weight:600">${pct}%</span>
-        </div>
-        <div style="height:6px;background:var(--s3);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .8s ease"></div>
-        </div>`:'<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono)">Meta não definida para este período</div>'}
-      </div>
-    </div>`;
-  }).join('');
+
+  // Contar realizado de prospecção e reunião por vendedor (BDR/SDR = campo prosp)
+  const prospMap={};
+  const reunMap={};
+  leads.forEach(function(l){
+    var p=l.prosp;
+    if(!p) return;
+    if(!prospMap[p]) prospMap[p]=0;
+    if(!reunMap[p])  reunMap[p]=0;
+    prospMap[p]++;
+    if(l.ord>=2) reunMap[p]++;
+  });
+
+  function metaBar(realizado, meta, cor, prefixo){
+    if(!meta) return '<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono)">Não definida</div>';
+    var pct=Math.min(Math.round((realizado/meta)*100),100);
+    var bc=pct>=100?'var(--g)':pct>=70?'var(--y)':cor;
+    return '<div style="margin-bottom:3px;display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono)">'
+      +'<span>'+(prefixo||'')+realizado+' de '+(prefixo||'')+meta+'</span>'
+      +'<span style="color:'+bc+';font-weight:600">'+pct+'%</span>'
+      +'</div>'
+      +'<div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden">'
+      +'<div style="height:100%;width:'+pct+'%;background:'+bc+';border-radius:3px;transition:width .8s ease"></div>'
+      +'</div>';
+  }
+
+  var html='';
+  for(var vi=0;vi<equipeVendedores.length;vi++){
+    var v=equipeVendedores[vi];
+    var m=metaMap[v.nome];
+    var metaFat   = m?Number(m.meta_valor||0):0;
+    var metaProsp = m?Number(m.meta_prospeccao||0):0;
+    var metaReun  = m?Number(m.meta_reuniao||0):0;
+    var metaId    = m?m.id:'';
+    var rec       = recMap[v.nome]||0;
+    var realProsp = prospMap[v.nome]||0;
+    var realReun  = reunMap[v.nome]||0;
+    var vid=v.id; var vnome=v.nome;
+
+    html+=''
+    +'<div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px">'
+      // cabeçalho vendedor
+      +'<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--c2));display:flex;align-items:center;justify-content:center;font-family:var(--f-title);font-size:13px;font-weight:800;color:#000;flex-shrink:0">'+v.nome.slice(0,2).toUpperCase()+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px">'+v.nome+'</div>'
+          +'<div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">'+v.email+'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+          +'<span class="sb '+(v.ativo?'sb-v':'sb-p')+'">'+(v.ativo?'✓ Ativo':'✗ Inativo')+'</span>'
+          +'<button class="btn btn-g btn-xs" onclick="editarVendedor(\''+vid+'\')">✎ Editar</button>'
+          +'<button class="btn btn-r btn-xs" onclick="removerVendedor(\''+vid+'\',\''+vnome+'\')">✕</button>'
+        +'</div>'
+      +'</div>'
+      // bloco metas
+      +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--b1)">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">'
+          +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">METAS '+mesNome.toUpperCase()+'/'+ano+'</span>'
+          +'<button class="btn btn-p btn-xs" onclick="salvarMeta(\''+vid+'\',\''+vnome+'\',\''+metaId+'\','+mes+','+ano+')">💾 Salvar metas</button>'
+        +'</div>'
+        // grid 3 colunas
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
+
+          // faturamento
+          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--c);margin-bottom:6px">💰 FATURAMENTO</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">R$</span>'
+              +'<input class="fi-inp" type="number" id="meta-fat-'+vid+'" value="'+metaFat+'" min="0" step="1000" style="flex:1;min-width:0" placeholder="0"/>'
+            +'</div>'
+            +metaBar(rec, metaFat, 'var(--c)', 'R$')
+          +'</div>'
+
+          // prospecção
+          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--o);margin-bottom:6px">📞 PROSPECÇÃO</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">#</span>'
+              +'<input class="fi-inp" type="number" id="meta-prosp-'+vid+'" value="'+metaProsp+'" min="0" step="10" style="flex:1;min-width:0" placeholder="0"/>'
+            +'</div>'
+            +metaBar(realProsp, metaProsp, 'var(--o)', '')
+          +'</div>'
+
+          // reunião
+          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--p);margin-bottom:6px">🤝 REUNIÃO</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">#</span>'
+              +'<input class="fi-inp" type="number" id="meta-reun-'+vid+'" value="'+metaReun+'" min="0" step="5" style="flex:1;min-width:0" placeholder="0"/>'
+            +'</div>'
+            +metaBar(realReun, metaReun, 'var(--p)', '')
+          +'</div>'
+
+        +'</div>'// fim grid
+      +'</div>'// fim bloco metas
+    +'</div>';// fim card vendedor
+  }
+  lista.innerHTML=html;
 }
 
 async function salvarMeta(vendedorId, vendedorNome, metaId, mes, ano){
-  const inp = document.getElementById('meta-inp-'+vendedorId);
-  if(!inp) return;
-  const val = Number(inp.value)||0;
-  const payload = {empresa_id:EID, vendedor_nome:vendedorNome, mes, ano, meta_valor:val};
+  const inpFat  = document.getElementById('meta-fat-'+vendedorId);
+  const inpProsp= document.getElementById('meta-prosp-'+vendedorId);
+  const inpReun = document.getElementById('meta-reun-'+vendedorId);
+  if(!inpFat) return;
+  const fat   = Number(inpFat.value)||0;
+  const prosp = Number(inpProsp?.value)||0;
+  const reun  = Number(inpReun?.value)||0;
+  const payload = {empresa_id:EID, vendedor_nome:vendedorNome, mes, ano, meta_valor:fat, meta_prospeccao:prosp, meta_reuniao:reun};
   let error;
   if(metaId){
-    ({error} = await DB.from('vendedor_metas').update({meta_valor:val}).eq('id',metaId));
+    ({error} = await DB.from('vendedor_metas').update({meta_valor:fat, meta_prospeccao:prosp, meta_reuniao:reun}).eq('id',metaId));
   } else {
     ({error} = await DB.from('vendedor_metas').insert(payload));
   }
   if(error){ toast('Erro ao salvar meta: '+error.message,'err'); return; }
-  toast(`✓ Meta de ${vendedorNome} definida: ${R(val)}`);
+  toast('✓ Metas de '+vendedorNome+' salvas!');
   await renderEquipe();
 }
 
