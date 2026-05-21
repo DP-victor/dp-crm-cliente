@@ -1983,9 +1983,12 @@ async function doLoginVendedor(){
   const err = document.getElementById('v-err');
   err.textContent = '';
   if(!em || !pw){ err.textContent = 'Preencha e-mail e senha.'; return; }
+  // Busca sem filtro de ativo para evitar problemas de tipo booleano no Supabase
   const {data, error} = await DB.from('usuarios').select('*')
-    .eq('email', em).eq('senha', pw).eq('perfil', 'comercial').eq('ativo', true).single();
-  if(error || !data){ err.textContent = 'E-mail ou senha incorretos.'; return; }
+    .eq('email', em).eq('senha', pw).eq('perfil', 'comercial').maybeSingle();
+  if(error){ err.textContent = 'Erro ao conectar. Tente novamente.'; console.error('Login erro:', error); return; }
+  if(!data){ err.textContent = 'E-mail ou senha incorretos.'; return; }
+  if(data.ativo === false){ err.textContent = 'Usuário inativo. Contate o administrador.'; return; }
   VENDEDOR_SESSAO = {...data, cargo: data.cargo||'closer'};
   sessionStorage.setItem('dp_vend', JSON.stringify(VENDEDOR_SESSAO));
   await initVendedor(data);
