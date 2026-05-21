@@ -2009,13 +2009,20 @@ async function renderMetas(){
   const mes = agora.getMonth() + 1;
   const ano = agora.getFullYear();
   const {data: metaRow} = await DB.from('vendedor_metas').select('*')
-    .eq('empresa_id', EID).eq('vendedor_nome', nome).eq('mes', mes).eq('ano', ano).single();
-  const meta = metaRow ? Number(metaRow.meta_valor) : 0;
+    .eq('empresa_id', EID).eq('vendedor_nome', nome).eq('mes', mes).eq('ano', ano).maybeSingle();
+  const meta      = metaRow ? Number(metaRow.meta_valor||0)      : 0;
+  const metaProsp = metaRow ? Number(metaRow.meta_prospeccao||0) : 0;
+  const metaReun  = metaRow ? Number(metaRow.meta_reuniao||0)    : 0;
   const vendas = leads.filter(l => l.st === 'venda');
   const receitaFechada = vendas.reduce((s,l)=>s+l.rec, 0);
   const leadsAtivos = leads.filter(l=>l.st==='ativo').length;
   const emPipeline = leads.filter(l=>l.st==='ativo').reduce((s,l)=>s+l.rec, 0);
   const pct = meta > 0 ? Math.min(Math.round((receitaFechada/meta)*100),100) : 0;
+  const meusLeads = leads.filter(l=>l.prosp&&l.prosp.toLowerCase()===nome.toLowerCase());
+  const realProsp = meusLeads.length;
+  const realReun  = meusLeads.filter(l=>l.ord>=2).length;
+  const pctProsp  = metaProsp>0?Math.min(Math.round((realProsp/metaProsp)*100),100):0;
+  const pctReun   = metaReun>0?Math.min(Math.round((realReun/metaReun)*100),100):0;
   const diasMes = new Date(ano, mes, 0).getDate();
   const diaAtual = agora.getDate();
   const projecao = diaAtual > 0 ? Math.round((receitaFechada/diaAtual)*diasMes) : 0;
@@ -2027,25 +2034,45 @@ async function renderMetas(){
     {l:'Projeção Mês', v:R(projecao), sub:'ritmo atual', kc:'var(--o)'},
   ].map((c,i)=>`<div class="kpi" style="--kc:${c.kc};animation-delay:${i*.07}s"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div><div class="kpi-sub">${c.sub}</div></div>`).join('');
   document.getElementById('meta-mes-badge').textContent = mesNome+' '+ano;
-  document.getElementById('meta-bar-vend').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2)">${R(receitaFechada)} de ${R(meta)}</span>
-      <span style="font-family:var(--f-title);font-size:18px;font-weight:800;color:${pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)'}">${pct}%</span>
-    </div>
-    <div style="height:10px;background:var(--s3);border-radius:5px;overflow:hidden">
-      <div style="height:100%;width:${pct}%;background:${pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)'};border-radius:5px;transition:width 1s ease"></div>
-    </div>
-    <div style="display:flex;gap:24px;margin-top:12px;font-size:11px;color:var(--t2);font-family:var(--f-mono)">
-      <span>Alcançado: <strong style="color:var(--tx)">${R(receitaFechada)}</strong></span>
-      <span>Projeção: <strong style="color:var(--tx)">${R(projecao)}</strong></span>
-      <span>Restante: <strong style="color:var(--tx)">${R(Math.max(meta-receitaFechada,0))}</strong></span>
-    </div>`;
-  const {data: todosLeads} = await DB.from('leads').select('vendedor,receita,status,etapa').eq('empresa_id', EID).not('vendedor','is',null);
+  function barHtml(real,metaV,cor,prefR,prefM){
+    if(!metaV) return '<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono);margin-top:4px">Meta não definida</div>';
+    var p=Math.min(Math.round((real/metaV)*100),100);
+    var bc=p>=100?'var(--g)':p>=70?'var(--y)':cor;
+    return '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:8px;margin-bottom:3px">'
+      +'<span>'+(prefR||'')+real+' de '+(prefM||'')+metaV+'</span>'
+      +'<span style="color:'+bc+';font-weight:600">'+p+'%</span></div>'
+      +'<div style="height:8px;background:var(--s3);border-radius:4px;overflow:hidden">'
+      +'<div style="height:100%;width:'+p+'%;background:'+bc+';border-radius:4px;transition:width 1s ease"></div></div>';
+  }
+  document.getElementById('meta-bar-vend').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">'
+    +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+      +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--c);margin-bottom:4px">💰 FATURAMENTO</div>'
+      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)')+'">'+pct+'%</div>'
+      +barHtml(receitaFechada,meta,'var(--c)','R$','R$')
+    +'</div>'
+    +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+      +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--o);margin-bottom:4px">📞 PROSPECÇÃO</div>'
+      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pctProsp>=100?'var(--g)':pctProsp>=70?'var(--y)':'var(--o)')+'">'+pctProsp+'%</div>'
+      +barHtml(realProsp,metaProsp,'var(--o)','','')
+    +'</div>'
+    +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
+      +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--p);margin-bottom:4px">🤝 REUNIÃO</div>'
+      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pctReun>=100?'var(--g)':pctReun>=70?'var(--y)':'var(--p)')+'">'+pctReun+'%</div>'
+      +barHtml(realReun,metaReun,'var(--p)','','')
+    +'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:24px;font-size:11px;color:var(--t2);font-family:var(--f-mono);flex-wrap:wrap">'
+      +'<span>Alcançado: <strong style="color:var(--tx)">'+R(receitaFechada)+'</strong></span>'
+      +'<span>Projeção: <strong style="color:var(--tx)">'+R(projecao)+'</strong></span>'
+      +'<span>Restante: <strong style="color:var(--tx)">'+R(Math.max(meta-receitaFechada,0))+'</strong></span>'
+    +'</div>';
+  const {data: todosLeads} = await DB.from('leads').select('vendedor,receita,status').eq('empresa_id', EID).not('vendedor','is',null);
   const ranking = {};
   (todosLeads||[]).forEach(l=>{
     const v = l.vendedor; if(!v) return;
     if(!ranking[v]) ranking[v] = {receita:0, vendas:0};
-    if(l.status==='venda'||l.etapa==='Ganho'){ ranking[v].receita += Number(l.receita||0); ranking[v].vendas++; }
+    if(l.status==='venda'){ ranking[v].receita += Number(l.receita||0); ranking[v].vendas++; }
   });
   const lista = Object.entries(ranking).sort((a,b)=>b[1].receita-a[1].receita);
   const maxR = lista[0]?.[1]?.receita || 1;
