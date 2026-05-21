@@ -10,12 +10,12 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#05080C;
-  --s1:#09111A;--s2:#0E1A27;--s3:#132233;--s4:#1A2E42;
-  --b1:#1E3048;--b2:#264060;--b3:#2E5070;
+  --bg:#F4F6FA;
+  --s1:#FFFFFF;--s2:#F0F3F8;--s3:#E4E9F2;--s4:#D8DFEE;
+  --b1:#DDE3EE;--b2:#C4CEDF;--b3:#A8B5CC;
   --c:#00D4FF;--c2:#00F5C8;--c3:#0EA5E9;
   --g:#10D98A;--r:#F04855;--y:#F5B800;--o:#FF6A2F;--p:#8B5CF6;
-  --tx:#E8F1FA;--t2:#7A9BB8;--t3:#3A5870;--t4:#1E3248;
+  --tx:#0D1B2A;--t2:#4A6080;--t3:#8A9BB5;--t4:#C4CEDF;
   --sw:256px;--hh:56px;
   --f-title:'Syne',sans-serif;
   --f-mono:'JetBrains Mono',monospace;
@@ -25,11 +25,11 @@ html{font-size:14px;-webkit-font-smoothing:antialiased}
 body{background:var(--bg);color:var(--tx);font-family:var(--f-body);min-height:100vh;overflow-x:hidden}
 
 /* ── NOISE OVERLAY ── */
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+body::before{display:none}
 
 /* ══════════ AUTH ══════════ */
 #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
-#auth-screen::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,.06) 0%,transparent 70%);left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
+#auth-screen::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,153,204,.08) 0%,transparent 70%);left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
 .auth-card{width:440px;background:var(--s1);border:1px solid var(--b1);border-radius:20px;overflow:hidden;position:relative;z-index:1}
 .auth-header{padding:32px 32px 20px;background:linear-gradient(180deg,rgba(0,212,255,.05) 0%,transparent 100%)}
 .auth-brand{font-family:var(--f-title);font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px}
@@ -53,7 +53,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* SIDEBAR */
 .sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:50;overflow-y:auto}
-.sidebar::-webkit-scrollbar{width:2px}.sidebar::-webkit-scrollbar-thumb{background:var(--b2)}
+.sidebar::-webkit-scrollbar{width:2px}.sidebar::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 .sb-logo{padding:22px 20px 18px;border-bottom:1px solid var(--b1)}
 .sb-brand{font-family:var(--f-title);font-size:18px;font-weight:800;letter-spacing:-0.3px;margin-bottom:3px}
 .sb-brand em{color:var(--c);font-style:normal}
@@ -62,7 +62,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .sb-sec{font-family:var(--f-mono);font-size:9px;letter-spacing:3px;color:var(--t3);text-transform:uppercase;padding:14px 18px 4px}
 .sb-a{display:flex;align-items:center;gap:9px;padding:8px 18px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;color:var(--t2);font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left}
 .sb-a:hover{color:var(--tx);background:rgba(0,212,255,.04)}
-.sb-a.on{color:var(--c);border-left:2px solid var(--c);background:rgba(0,212,255,.06)}
+.sb-a.on{color:var(--c);border-left:2px solid var(--c);background:rgba(0,153,204,.08)}
 .sb-a .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.8}
 .sb-foot{padding:16px 18px;border-top:1px solid var(--b1)}
 .u-row{display:flex;align-items:center;gap:10px}
@@ -126,7 +126,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 table{width:100%;border-collapse:collapse;min-width:500px}
 th{font-family:var(--f-mono);font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;padding:8px 12px;border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap;background:var(--s2)}
 td{padding:9px 12px;border-bottom:1px solid var(--b1);font-size:12px;color:var(--t2);vertical-align:middle}
-tr:hover td{background:rgba(0,212,255,.02)}
+tr:hover td{background:rgba(0,153,204,.04)}
 tr:last-child td{border-bottom:none}
 .td-m{color:var(--tx)!important;font-weight:600}
 .ei,.es{background:var(--s2);border:1px solid var(--b1);border-radius:6px;color:var(--tx);font-family:var(--f-mono);font-size:11px;padding:4px 8px;outline:none;transition:border-color .2s;width:100%}
@@ -1691,7 +1691,12 @@ function renderInd(){
     {l:'CAC Médio',v:R(s.cacM),kc:'var(--y)'},
     {l:'LTV Médio',v:R(s.ltv),kc:'var(--g)'},
   ].map(c=>`<div class="kpi" style="--kc:${c.kc}"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div></div>`).join('');
-  const meta=Number(localStorage.getItem('dp_meta_'+EID))||0;
+  const agora_ind=new Date();
+  const mes_ind=agora_ind.getMonth()+1;
+  const ano_ind=agora_ind.getFullYear();
+  const {data: metaFinRow}=await DB.from('metas_financeiras').select('*').eq('empresa_id',EID).eq('mes',mes_ind).eq('ano',ano_ind).maybeSingle();
+  const meta=metaFinRow?Number(metaFinRow.meta_faturamento||0):0;
+  const metaFinId=metaFinRow?metaFinRow.id:null;
   const gap=meta>0?Math.max(0,meta-s.rec):null;
   const maxCV=cv.reduce((a,b)=>Number(b.valor)>Number(a.valor)?b:a,cv[0]||null);
   document.getElementById('ind-detalhe').innerHTML=dreRows([
@@ -1705,10 +1710,21 @@ function renderInd(){
     {sep:true,lbl:'ATENÇÃO'},
     ...(maxCV?[[`Maior custo var. do mês: ${maxCV.nome}`,R(maxCV.valor),'neg']]:[]),
     ['LTV/CAC',s.cacM>0?`${(s.ltv/s.cacM).toFixed(1)}x`:'—',s.cacM>0&&s.ltv/s.cacM>=3?'pos':'warn'],
-  ])+`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--b1)"><span class="sep-lbl">Meta de faturamento do mês</span><div style="display:flex;align-items:center;gap:8px"><input class="fi-inp" type="number" id="meta-inp" value="${meta||''}" placeholder="Ex: 50000" style="flex:1"/><button class="btn btn-p btn-sm" onclick="salvarMeta()">Salvar</button></div></div>`;
+  ])+`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--b1)"><span class="sep-lbl">Meta de faturamento do mês</span><div style="display:flex;align-items:center;gap:8px"><input class="fi-inp" type="number" id="meta-inp" value="${meta||''}" placeholder="Ex: 50000" style="flex:1"/><button class="btn btn-p btn-sm" onclick="salvarMetaGeral('${metaFinId||''}',${mes_ind},${ano_ind})">Salvar</button></div></div>`;
   renderChartDiario('c-ind-d',leads,'c-de','c-ate');
 }
-function salvarMeta(){const v=+document.getElementById('meta-inp').value;localStorage.setItem('dp_meta_'+EID,v);toast('✓ Meta salva!');renderInd();}
+async function salvarMetaGeral(metaId,mes,ano){
+  const v=+document.getElementById('meta-inp').value||0;
+  let error;
+  if(metaId){
+    ({error}=await DB.from('metas_financeiras').update({meta_faturamento:v}).eq('id',metaId));
+  } else {
+    ({error}=await DB.from('metas_financeiras').insert({empresa_id:EID,mes,ano,meta_faturamento:v,meta_vendas:0,meta_leads:0}));
+  }
+  if(error){toast('Erro ao salvar meta: '+error.message,'err');return;}
+  toast('✓ Meta salva!');
+  renderInd();
+}
 function renderPA(){
   const s=stats(leads);
   const diag=[];
@@ -2018,6 +2034,7 @@ async function renderMetas(){
   const leadsAtivos = leads.filter(l=>l.st==='ativo').length;
   const emPipeline = leads.filter(l=>l.st==='ativo').reduce((s,l)=>s+l.rec, 0);
   const pct = meta > 0 ? Math.min(Math.round((receitaFechada/meta)*100),100) : 0;
+  // realizado prospecção e reunião (leads onde o vendedor é o prospectador)
   const meusLeads = leads.filter(l=>l.prosp&&l.prosp.toLowerCase()===nome.toLowerCase());
   const realProsp = meusLeads.length;
   const realReun  = meusLeads.filter(l=>l.ord>=2).length;
@@ -2045,20 +2062,23 @@ async function renderMetas(){
       +'<div style="height:100%;width:'+p+'%;background:'+bc+';border-radius:4px;transition:width 1s ease"></div></div>';
   }
   document.getElementById('meta-bar-vend').innerHTML =
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">'
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">'
+    // faturamento
     +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
       +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--c);margin-bottom:4px">💰 FATURAMENTO</div>'
-      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)')+'">'+pct+'%</div>'
+      +'<div style="font-family:var(--f-title);font-size:18px;font-weight:800;color:'+(pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)')+'">'+pct+'%</div>'
       +barHtml(receitaFechada,meta,'var(--c)','R$','R$')
     +'</div>'
+    // prospecção
     +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
       +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--o);margin-bottom:4px">📞 PROSPECÇÃO</div>'
-      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pctProsp>=100?'var(--g)':pctProsp>=70?'var(--y)':'var(--o)')+'">'+pctProsp+'%</div>'
+      +'<div style="font-family:var(--f-title);font-size:18px;font-weight:800;color:'+(pctProsp>=100?'var(--g)':pctProsp>=70?'var(--y)':'var(--o)')+'">'+pctProsp+'%</div>'
       +barHtml(realProsp,metaProsp,'var(--o)','','')
     +'</div>'
+    // reunião
     +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
       +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--p);margin-bottom:4px">🤝 REUNIÃO</div>'
-      +'<div style="font-family:var(--f-title);font-size:22px;font-weight:800;color:'+(pctReun>=100?'var(--g)':pctReun>=70?'var(--y)':'var(--p)')+'">'+pctReun+'%</div>'
+      +'<div style="font-family:var(--f-title);font-size:18px;font-weight:800;color:'+(pctReun>=100?'var(--g)':pctReun>=70?'var(--y)':'var(--p)')+'">'+pctReun+'%</div>'
       +barHtml(realReun,metaReun,'var(--p)','','')
     +'</div>'
     +'</div>'
@@ -2067,6 +2087,7 @@ async function renderMetas(){
       +'<span>Projeção: <strong style="color:var(--tx)">'+R(projecao)+'</strong></span>'
       +'<span>Restante: <strong style="color:var(--tx)">'+R(Math.max(meta-receitaFechada,0))+'</strong></span>'
     +'</div>';
+  // ranking (campos corretos do banco: vendedor, receita, status)
   const {data: todosLeads} = await DB.from('leads').select('vendedor,receita,status').eq('empresa_id', EID).not('vendedor','is',null);
   const ranking = {};
   (todosLeads||[]).forEach(l=>{
@@ -2268,123 +2289,59 @@ async function renderEquipe(){
   }
 
   const mesNome=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mes-1];
-
-  // Contar realizado de prospecção e reunião por vendedor (BDR/SDR = campo prosp)
-  const prospMap={};
-  const reunMap={};
-  leads.forEach(function(l){
-    var p=l.prosp;
-    if(!p) return;
-    if(!prospMap[p]) prospMap[p]=0;
-    if(!reunMap[p])  reunMap[p]=0;
-    prospMap[p]++;
-    if(l.ord>=2) reunMap[p]++;
-  });
-
-  function metaBar(realizado, meta, cor, prefixo){
-    if(!meta) return '<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono)">Não definida</div>';
-    var pct=Math.min(Math.round((realizado/meta)*100),100);
-    var bc=pct>=100?'var(--g)':pct>=70?'var(--y)':cor;
-    return '<div style="margin-bottom:3px;display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono)">'
-      +'<span>'+(prefixo||'')+realizado+' de '+(prefixo||'')+meta+'</span>'
-      +'<span style="color:'+bc+';font-weight:600">'+pct+'%</span>'
-      +'</div>'
-      +'<div style="height:5px;background:var(--s3);border-radius:3px;overflow:hidden">'
-      +'<div style="height:100%;width:'+pct+'%;background:'+bc+';border-radius:3px;transition:width .8s ease"></div>'
-      +'</div>';
-  }
-
-  var html='';
-  for(var vi=0;vi<equipeVendedores.length;vi++){
-    var v=equipeVendedores[vi];
-    var m=metaMap[v.nome];
-    var metaFat   = m?Number(m.meta_valor||0):0;
-    var metaProsp = m?Number(m.meta_prospeccao||0):0;
-    var metaReun  = m?Number(m.meta_reuniao||0):0;
-    var metaId    = m?m.id:'';
-    var rec       = recMap[v.nome]||0;
-    var realProsp = prospMap[v.nome]||0;
-    var realReun  = reunMap[v.nome]||0;
-    var vid=v.id; var vnome=v.nome;
-
-    html+=''
-    +'<div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px">'
-      // cabeçalho vendedor
-      +'<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
-        +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--c2));display:flex;align-items:center;justify-content:center;font-family:var(--f-title);font-size:13px;font-weight:800;color:#000;flex-shrink:0">'+v.nome.slice(0,2).toUpperCase()+'</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px">'+v.nome+'</div>'
-          +'<div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">'+v.email+'</div>'
-        +'</div>'
-        +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-          +'<span class="sb '+(v.ativo?'sb-v':'sb-p')+'">'+(v.ativo?'✓ Ativo':'✗ Inativo')+'</span>'
-          +'<button class="btn btn-g btn-xs" onclick="editarVendedor(\''+vid+'\')">✎ Editar</button>'
-          +'<button class="btn btn-r btn-xs" onclick="removerVendedor(\''+vid+'\',\''+vnome+'\')">✕</button>'
-        +'</div>'
-      +'</div>'
-      // bloco metas
-      +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--b1)">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">'
-          +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">METAS '+mesNome.toUpperCase()+'/'+ano+'</span>'
-          +'<button class="btn btn-p btn-xs" onclick="salvarMeta(\''+vid+'\',\''+vnome+'\',\''+metaId+'\','+mes+','+ano+')">💾 Salvar metas</button>'
-        +'</div>'
-        // grid 3 colunas
-        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
-
-          // faturamento
-          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
-            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--c);margin-bottom:6px">💰 FATURAMENTO</div>'
-            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">R$</span>'
-              +'<input class="fi-inp" type="number" id="meta-fat-'+vid+'" value="'+metaFat+'" min="0" step="1000" style="flex:1;min-width:0" placeholder="0"/>'
-            +'</div>'
-            +metaBar(rec, metaFat, 'var(--c)', 'R$')
-          +'</div>'
-
-          // prospecção
-          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
-            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--o);margin-bottom:6px">📞 PROSPECÇÃO</div>'
-            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">#</span>'
-              +'<input class="fi-inp" type="number" id="meta-prosp-'+vid+'" value="'+metaProsp+'" min="0" step="10" style="flex:1;min-width:0" placeholder="0"/>'
-            +'</div>'
-            +metaBar(realProsp, metaProsp, 'var(--o)', '')
-          +'</div>'
-
-          // reunião
-          +'<div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px">'
-            +'<div style="font-family:var(--f-mono);font-size:9px;letter-spacing:1.5px;color:var(--p);margin-bottom:6px">🤝 REUNIÃO</div>'
-            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-              +'<span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)">#</span>'
-              +'<input class="fi-inp" type="number" id="meta-reun-'+vid+'" value="'+metaReun+'" min="0" step="5" style="flex:1;min-width:0" placeholder="0"/>'
-            +'</div>'
-            +metaBar(realReun, metaReun, 'var(--p)', '')
-          +'</div>'
-
-        +'</div>'// fim grid
-      +'</div>'// fim bloco metas
-    +'</div>';// fim card vendedor
-  }
-  lista.innerHTML=html;
+  lista.innerHTML=equipeVendedores.map(v=>{
+    const m=metaMap[v.nome];
+    const metaVal=m?Number(m.meta_valor):0;
+    const metaId=m?m.id:null;
+    const rec=recMap[v.nome]||0;
+    const pct=metaVal>0?Math.min(Math.round((rec/metaVal)*100),100):0;
+    const barColor=pct>=100?'var(--g)':pct>=70?'var(--y)':'var(--c)';
+    return `
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px 18px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--c),var(--c2));display:flex;align-items:center;justify-content:center;font-family:var(--f-title);font-size:13px;font-weight:800;color:#000;flex-shrink:0">${v.nome.slice(0,2).toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px">${v.nome}</div>
+          <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono)">${v.email}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span class="sb ${v.ativo?'sb-v':'sb-p'}">${v.ativo?'✓ Ativo':'✗ Inativo'}</span>
+          <button class="btn btn-g btn-xs" onclick="editarVendedor('${v.id}')">✎ Editar</button>
+          <button class="btn btn-r btn-xs" onclick="removerVendedor('${v.id}','${v.nome}')">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--b1)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-family:var(--f-mono);font-size:10px;color:var(--t2);letter-spacing:1px">META ${mesNome.toUpperCase()}/${ano}</span>
+          <input class="fi-inp" type="number" id="meta-inp-${v.id}" value="${metaVal}" min="0" step="1000" style="width:140px;text-align:left" placeholder="R$ 0"/>
+          <button class="btn btn-p btn-xs" onclick="salvarMeta('${v.id}','${v.nome}','${metaId||''}',${mes},${ano})">Salvar meta</button>
+        </div>
+        ${metaVal>0?`
+        <div style="margin-bottom:4px;display:flex;justify-content:space-between;font-size:11px;color:var(--t2);font-family:var(--f-mono)">
+          <span>${R(rec)} de ${R(metaVal)}</span>
+          <span style="color:${barColor};font-weight:600">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--s3);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width .8s ease"></div>
+        </div>`:'<div style="font-size:11px;color:var(--t3);font-family:var(--f-mono)">Meta não definida para este período</div>'}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function salvarMeta(vendedorId, vendedorNome, metaId, mes, ano){
-  const inpFat  = document.getElementById('meta-fat-'+vendedorId);
-  const inpProsp= document.getElementById('meta-prosp-'+vendedorId);
-  const inpReun = document.getElementById('meta-reun-'+vendedorId);
-  if(!inpFat) return;
-  const fat   = Number(inpFat.value)||0;
-  const prosp = Number(inpProsp?.value)||0;
-  const reun  = Number(inpReun?.value)||0;
-  const payload = {empresa_id:EID, vendedor_nome:vendedorNome, mes, ano, meta_valor:fat, meta_prospeccao:prosp, meta_reuniao:reun};
+  const inp = document.getElementById('meta-inp-'+vendedorId);
+  if(!inp) return;
+  const val = Number(inp.value)||0;
+  const payload = {empresa_id:EID, vendedor_nome:vendedorNome, mes, ano, meta_valor:val};
   let error;
   if(metaId){
-    ({error} = await DB.from('vendedor_metas').update({meta_valor:fat, meta_prospeccao:prosp, meta_reuniao:reun}).eq('id',metaId));
+    ({error} = await DB.from('vendedor_metas').update({meta_valor:val}).eq('id',metaId));
   } else {
     ({error} = await DB.from('vendedor_metas').insert(payload));
   }
   if(error){ toast('Erro ao salvar meta: '+error.message,'err'); return; }
-  toast('✓ Metas de '+vendedorNome+' salvas!');
+  toast(`✓ Meta de ${vendedorNome} definida: ${R(val)}`);
   await renderEquipe();
 }
 
