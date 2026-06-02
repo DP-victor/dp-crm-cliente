@@ -1506,7 +1506,10 @@ function renderLeads(){
     <td><input class="ei" type="number" value="${l.rec||''}" placeholder="0" onchange="updLead(${l.dbId},'rec',+this.value)" style="width:88px"></td>
     <td style="font-family:var(--f-mono);font-size:11px;color:var(--t2)">${fdt(l.cx)}</td>
     <td><input class="ei" type="number" value="${l.cac||''}" placeholder="0" onchange="updLead(${l.dbId},'cac',+this.value)" style="width:76px"></td>
-    <td><button class="btn btn-r btn-xs" onclick="delLead(${l.dbId})">✕</button></td>
+    <td style="white-space:nowrap;display:flex;gap:4px;align-items:center">
+      <button class="btn btn-g btn-xs" onclick="editLead(${l.dbId})" title="Editar lead completo" style="padding:3px 8px">✏️</button>
+      <button class="btn btn-r btn-xs" onclick="delLead(${l.dbId})">✕</button>
+    </td>
   </tr>`).join('');
 }
 function updLead(id,f,v){
@@ -1548,6 +1551,13 @@ function editLead(id){
   document.getElementById('ml-meio').value=l.meio||'pix';
   document.getElementById('ml-parc').value=l.parc||1;
   document.getElementById('ml-taxa').value=l.taxa||'';
+  // Trava vendedor e cargo se sessão de vendedor
+  if(VENDEDOR_SESSAO){
+    const mlVend=document.getElementById('ml-vend');
+    if(mlVend){mlVend.value=VENDEDOR_SESSAO.nome;mlVend.readOnly=true;mlVend.style.opacity='0.6';}
+    const mlCargo=document.getElementById('ml-cargo');
+    if(mlCargo){mlCargo.value=VENDEDOR_SESSAO.cargo||'closer';mlCargo.disabled=true;mlCargo.style.opacity='0.6';atualizarEtapasModal();}
+  }
   openM('m-lead');
 }
 
