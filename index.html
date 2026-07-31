@@ -290,6 +290,7 @@ tr:last-child td{border-bottom:none}
 .alert-tag-churn{background:rgba(192,57,43,.12);color:var(--r)}
 .alert-tag-upsell{background:rgba(26,138,90,.12);color:var(--g)}
 .alert-tag-reconhecimento{background:rgba(91,63,160,.12);color:var(--p)}
+.alert-tag-proxima_acao{background:rgba(26,107,181,.12);color:var(--c)}
 .alert-date{font-family:var(--f-mono);font-size:10px;color:var(--t3)}
 .alert-msg{font-size:12px;color:var(--tx);line-height:1.4;margin-bottom:6px}
 .alert-item-actions{display:flex;gap:6px}
@@ -2660,8 +2661,8 @@ let alertasAbertos=[];
 const TIER_LBL={top:'★ Top 10%',consolidado:'Consolidado',novo:'Novo (<30d)',risco:'Em risco'};
 const P360_HS_LBL={saudavel:'✓ Saudável',atencao:'⚠ Atenção',risco:'⚠ Risco de churn',sem_dados:'Sem dados'};
 const P360_ALERTA_LBL={aniversario:'🎂 é aniversário dele(a) — manda uma mensagem',pagamento:'💰 tem pagamento próximo do vencimento',churn:'⚠️ está sem contato há tempo — ligar ou mandar mensagem',upsell:'💡 está saudável e lucrativo — bom momento pra oferecer o próximo passo',reconhecimento:'🌟 já indicou várias pessoas — vale um agradecimento'};
-const ALERTA_IC={aniversario:'🎂',pagamento:'💰',churn:'⚠️',upsell:'💡',reconhecimento:'🌟'};
-const ALERTA_LBL={aniversario:'Aniversário',pagamento:'Pagamento',churn:'Risco de churn',upsell:'Oportunidade',reconhecimento:'Reconhecimento'};
+const ALERTA_IC={aniversario:'🎂',pagamento:'💰',churn:'⚠️',upsell:'💡',reconhecimento:'🌟',proxima_acao:'➜'};
+const ALERTA_LBL={aniversario:'Aniversário',pagamento:'Pagamento',churn:'Risco de churn',upsell:'Oportunidade',reconhecimento:'Reconhecimento',proxima_acao:'Ação agendada'};
 
 async function loadClientesFromDB(){
   const{data,error}=await DB.from('clientes_ativos').select('*').eq('empresa_id',EID).order('criado_em',{ascending:true});
@@ -2675,6 +2676,7 @@ async function loadClientes360Map(){
 }
 async function loadAlertas(){
   if(!EID)return;
+  try{await DB.rpc('fn_gerar_alertas');}catch(e){console.error('fn_gerar_alertas rpc erro:',e);}
   const{data,error}=await DB.from('alertas').select('*').eq('empresa_id',EID).eq('status','aberto').order('criado_em',{ascending:false});
   if(error){console.error('loadAlertas erro:',error);return;}
   alertasAbertos=data||[];
@@ -2907,8 +2909,10 @@ async function p360SalvarProximaAcao(){
   const proxima_acao_data=document.getElementById('p360-proxima-acao-data').value||null;
   const{error}=await DB.from('clientes_ativos').update({proxima_acao,proxima_acao_data}).eq('id',p360Data.cliente_id);
   if(error){toast('Erro ao salvar ação: '+error.message,'err');return;}
+  await DB.from('alertas').update({status:'resolvido',resolvido_em:new Date().toISOString()}).eq('cliente_id',p360Data.cliente_id).eq('tipo','proxima_acao').eq('status','aberto');
   toast('✓ Próxima ação salva');
   await loadClientes360Map();
+  await loadAlertas();
   renderClientes();
 }
 
