@@ -15,7 +15,7 @@
   --s1:#FFFFFF;--s2:#F0F6FC;--s3:#E2EDF7;--s4:#D4E4F0;
   --b1:#BDD5EA;--b2:#9BBCD9;--b3:#7AA3C7;
   --c:#1A6BB5;--c2:#1558A0;--c3:#2479C8;
-  --g:#1A8A5A;--r:#C0392B;--y:#C07A00;--o:#C05A00;--p:#5B3FA0;
+  --g:#1A8A5A;--r:#C0392B;--y:#C07A00;--o:#C05A00;--p:#5B3FA0;--gold:#A07A20;
   --tx:#0D2A45;--t2:#2E5F8A;--t3:#7A9BB8;--t4:#BDD5EA;
   --sw:256px;--hh:56px;
   --f-title:'Syne',sans-serif;
@@ -272,6 +272,55 @@ tr:last-child td{border-bottom:none}
 .si{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 12px;color:var(--tx);font-size:13px;outline:none;transition:border-color .2s;flex:1;min-width:180px}
 .si:focus{border-color:var(--c)}
 .ssi{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:7px 10px;color:var(--t2);font-size:11px;font-family:var(--f-mono);outline:none;cursor:pointer}
+/* ── ALERTAS ── */
+.alert-bell-wrap{position:relative}
+.alert-bell-btn{position:relative;font-size:14px;line-height:1}
+.alert-badge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:20px;background:var(--r);color:#fff;font-family:var(--f-mono);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.alert-panel{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;max-height:420px;background:var(--s1);border:1px solid var(--b1);border-radius:12px;box-shadow:0 16px 40px rgba(13,42,69,.18);z-index:150;overflow:hidden;flex-direction:column}
+.alert-panel.on{display:flex}
+.alert-panel-hd{padding:12px 16px;border-bottom:1px solid var(--b1);font-family:var(--f-title);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.alert-panel-list{overflow-y:auto;flex:1}
+.alert-empty{padding:24px 16px;text-align:center;font-size:12px;color:var(--t3)}
+.alert-item{padding:10px 16px;border-bottom:1px solid var(--s3)}
+.alert-item:last-child{border-bottom:none}
+.alert-item-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.alert-tag{font-family:var(--f-mono);font-size:9px;letter-spacing:.5px;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.alert-tag-aniversario{background:rgba(160,122,32,.12);color:var(--gold)}
+.alert-tag-pagamento{background:rgba(192,122,0,.12);color:var(--y)}
+.alert-tag-churn{background:rgba(192,57,43,.12);color:var(--r)}
+.alert-tag-upsell{background:rgba(26,138,90,.12);color:var(--g)}
+.alert-tag-reconhecimento{background:rgba(91,63,160,.12);color:var(--p)}
+.alert-date{font-family:var(--f-mono);font-size:10px;color:var(--t3)}
+.alert-msg{font-size:12px;color:var(--tx);line-height:1.4;margin-bottom:6px}
+.alert-item-actions{display:flex;gap:6px}
+
+/* ── PERFIL 360° ── */
+.p360-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+@media(max-width:820px){.p360-grid{grid-template-columns:1fr}}
+.p360-sec{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.p360-sec-t{font-family:var(--f-mono);font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;margin-bottom:10px}
+.p360-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.p360-stat{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px 12px}
+.p360-stat-l{font-family:var(--f-mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.p360-stat-v{font-family:var(--f-title);font-size:17px;font-weight:800;color:var(--c)}
+.p360-health{display:flex;align-items:center;gap:8px;margin-top:4px}
+.p360-health-bar{flex:1;height:6px;border-radius:6px;background:var(--s3);overflow:hidden}
+.p360-health-fi{height:100%;border-radius:6px}
+.p360-timeline{max-height:220px;overflow-y:auto}
+.p360-tl-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--s3);font-size:12px}
+.p360-tl-item:last-child{border-bottom:none}
+.p360-tl-dot{width:6px;height:6px;border-radius:50%;background:var(--c);margin-top:5px;flex-shrink:0}
+.p360-badge{font-family:var(--f-mono);font-size:10px;padding:3px 9px;border-radius:20px}
+.p360-badge-saudavel{background:rgba(26,138,90,.12);color:var(--g)}
+.p360-badge-atencao{background:rgba(192,122,0,.12);color:var(--y)}
+.p360-badge-risco{background:rgba(192,57,43,.12);color:var(--r)}
+.p360-badge-sem_dados{background:rgba(122,155,184,.12);color:var(--t3)}
+.p360-badge-tier-top{background:rgba(160,122,32,.14);color:var(--gold)}
+.p360-badge-tier-consolidado{background:rgba(26,107,181,.12);color:var(--c)}
+.p360-badge-tier-novo{background:rgba(91,63,160,.12);color:var(--p)}
+.p360-badge-tier-risco{background:rgba(192,57,43,.12);color:var(--r)}
+.p360-lgpd-note{background:rgba(160,122,32,.08);border:1px solid rgba(160,122,32,.18);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--t2);margin-bottom:12px;line-height:1.4}
+
 .toast{position:fixed;bottom:20px;right:20px;background:var(--s2);border:1px solid var(--g);border-radius:10px;padding:12px 18px;font-family:var(--f-mono);font-size:12px;color:var(--g);z-index:500;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
 .toast.on{transform:translateY(0);opacity:1}
 .toast.err{border-color:var(--r);color:var(--r)}
@@ -351,6 +400,8 @@ tr:last-child td{border-bottom:none}
     <button class="sb-a" onclick="nav('leads',this)"><span class="ic">◎</span>Leads & Pipeline</button>
     <button class="sb-a sb-only-vend" onclick="nav('metas',this)" style="display:none"><span class="ic">◎</span>Minhas Metas</button>
     <button class="sb-a sb-only-vend" onclick="nav('jornada',this)" style="display:none"><span class="ic">◈</span>Jornada</button>
+    <div class="sb-sec sb-only-admin">Pós-venda</div>
+    <button class="sb-a sb-only-admin" onclick="nav('clientes',this)"><span class="ic">☺</span>Clientes Ativos</button>
     <div class="sb-sec sb-only-admin">Financeiro</div>
     <button class="sb-a sb-only-admin" onclick="nav('fin',this)"><span class="ic">◐</span>Financeiro</button>
     <div class="sb-sec sb-only-admin">Pessoas</div>
@@ -378,6 +429,13 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="tb-r">
       <div class="live"><span class="live-dot"></span>LIVE</div>
+      <div class="alert-bell-wrap sb-only-admin">
+        <button class="btn btn-g btn-sm alert-bell-btn" id="alert-bell-btn" onclick="toggleAlertasPanel(event)" title="Alertas">🔔<span class="alert-badge" id="alert-badge" style="display:none">0</span></button>
+        <div class="alert-panel" id="alert-panel">
+          <div class="alert-panel-hd"><span>Alertas</span><span id="alert-panel-count" style="color:var(--t3);font-weight:500"></span></div>
+          <div class="alert-panel-list" id="alert-panel-list"></div>
+        </div>
+      </div>
       <select class="psel" id="gPer" onchange="onPeriod()">
         <option value="mes" selected>Este mês</option>
         <option value="semana">Esta semana</option>
@@ -426,6 +484,16 @@ tr:last-child td{border-bottom:none}
         <div id="ov-recent"></div>
       </div>
     </div>
+  </div>
+
+  <!-- ── CLIENTES ATIVOS (PÓS-VENDA) ── -->
+  <div class="view" id="v-clientes">
+    <div class="kg g3" id="cl-kpis"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <input class="fi" id="cl-search" placeholder="🔍 Buscar cliente ativo..." oninput="renderClientes()" style="max-width:300px">
+      <button class="btn btn-p btn-sm" onclick="abrirNovoCliente()">+ Novo Cliente Ativo</button>
+    </div>
+    <div id="clientesWrap"></div>
   </div>
 
   <!-- ── DASHBOARD BI ── -->
@@ -909,6 +977,116 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- CLIENTE ATIVO — simples (sem framework de entrega) -->
+<div class="modal" id="m-cliente">
+  <div class="modal-box" style="max-width:500px">
+    <div class="mhd"><div class="mtl" id="mca-title">+ Novo Cliente Ativo</div><button class="mcl" onclick="closeM('m-cliente')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="mca-id">
+      <div class="fg2">
+        <div class="fg full"><label class="fl">Nome do Cliente *</label><input class="fi" id="mca-nome" placeholder="Ex: Clínica Exemplo"></div>
+        <div class="fg full"><label class="fl">Lead vinculado (venda fechada)</label><select class="fs" id="mca-lead"><option value="">— nenhum —</option></select></div>
+        <div class="fg"><label class="fl">Responsável pela conta</label><input class="fi" id="mca-resp" placeholder="Quem cuida do cliente"></div>
+        <div class="fg"><label class="fl">Produto/Serviço contratado</label><input class="fi" id="mca-prod" placeholder="Ex: Consultoria"></div>
+        <div class="fg"><label class="fl">Data de início</label><input class="fi" id="mca-inicio" type="date"></div>
+        <div class="fg full"><label class="fl">Observação inicial</label><textarea class="fta" id="mca-obs" rows="2" placeholder="Contexto inicial do cliente..."></textarea></div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-g" onclick="closeM('m-cliente')">Cancelar</button><button class="btn btn-p" onclick="salvarClienteAtivo()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- PERFIL 360° DO CLIENTE -->
+<div class="modal" id="m-p360">
+  <div class="modal-box" style="max-width:820px">
+    <div class="mhd">
+      <div>
+        <div class="mtl" id="p360-nome">◈ Perfil 360°</div>
+        <div style="font-family:var(--f-mono);font-size:10px;color:var(--t2);margin-top:3px" id="p360-sub">—</div>
+      </div>
+      <span class="p360-badge" id="p360-tier-badge" style="margin-right:8px">—</span>
+      <button class="mcl" onclick="closeM('m-p360')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="p360-sec" style="background:rgba(26,107,181,.06);border-color:rgba(26,107,181,.2)">
+        <div class="p360-sec-t">➜ Próxima ação sugerida</div>
+        <div id="p360-sugestao" style="font-size:12px;color:var(--t2);margin-bottom:8px"></div>
+        <div class="fg2">
+          <div class="fg full"><input class="fi" id="p360-proxima-acao" placeholder="Ex: Ligar pra falar sobre upsell"></div>
+          <div class="fg"><label class="fl">Fazer até</label><input class="fi" id="p360-proxima-acao-data" type="date"></div>
+          <div class="fg" style="justify-content:flex-end;display:flex;align-items:flex-end"><button class="btn btn-g btn-sm" onclick="p360SalvarProximaAcao()" style="width:100%">💾 Salvar ação</button></div>
+        </div>
+      </div>
+      <div class="p360-grid">
+        <div>
+          <div class="p360-sec">
+            <div class="p360-sec-t">Relacionamento comercial</div>
+            <div class="p360-stats">
+              <div class="p360-stat"><div class="p360-stat-l">Contratou</div><div class="p360-stat-v" id="p360-produto" style="font-size:13px">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Cliente desde</div><div class="p360-stat-v" id="p360-inicio" style="font-size:13px">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Responsável</div><div class="p360-stat-v" id="p360-resp" style="font-size:13px">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Aniversário</div><div class="p360-stat-v" id="p360-aniv" style="font-size:13px">—</div></div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="p360-stat-l">Última conversa registrada</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
+                <span style="font-size:13px;color:var(--tx)" id="p360-ultima-interacao">—</span>
+                <span class="p360-badge" id="p360-health-badge">—</span>
+              </div>
+              <div class="p360-health"><div class="p360-health-bar"><div class="p360-health-fi" id="p360-health-bar"></div></div><span style="font-family:var(--f-mono);font-size:10px;color:var(--t3)" id="p360-health-score">—</span></div>
+            </div>
+          </div>
+
+          <div class="p360-sec">
+            <div class="p360-sec-t">Financeiro do cliente</div>
+            <div class="p360-stats">
+              <div class="p360-stat"><div class="p360-stat-l">Receita total</div><div class="p360-stat-v" id="p360-receita" style="color:var(--g)">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Custo total</div><div class="p360-stat-v" id="p360-custo" style="color:var(--r)">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Lucro gerado</div><div class="p360-stat-v" id="p360-lucro">—</div></div>
+              <div class="p360-stat"><div class="p360-stat-l">Indicações feitas</div><div class="p360-stat-v" id="p360-indicacoes">—</div></div>
+            </div>
+          </div>
+
+          <div class="p360-sec">
+            <div class="p360-sec-t">Timeline · últimas interações</div>
+            <div class="p360-timeline" id="p360-timeline"><div class="empty" style="padding:14px"><div class="empty-tx">Carregando...</div></div></div>
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+              <input class="fi" id="p360-nova-nota" placeholder="Registrar nova interação..." style="flex:1;min-width:200px">
+              <select class="fs" id="p360-tempo-resposta" style="max-width:150px"><option value="">Tempo resp. —</option><option value="menos_1h">&lt; 1h</option><option value="1_4h">1-4h</option><option value="4_24h">4-24h</option><option value="mais_24h">+24h</option></select>
+              <button class="btn btn-p btn-sm" onclick="p360RegistrarInteracao()">+ Registrar</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="p360-sec">
+            <div class="p360-sec-t">Perfil pessoal · quem é essa pessoa</div>
+            <div class="p360-lgpd-note">🔒 Use só o que a pessoa contou espontaneamente em conversa. Não é pra fins de crédito/score — é pra personalizar o relacionamento. Se não souber, deixe em branco.</div>
+            <div class="fg2">
+              <div class="fg full"><label class="fl">Como você sabe disso?</label><select class="fs" id="p360-perfil-fonte"><option value="">—</option><option>Conversa informal com o cliente</option><option>Comentado em reunião</option><option>Rede social pública</option><option>Indicado por outro cliente</option></select></div>
+              <div class="fg"><label class="fl">Profissão</label><input class="fi" id="p360-profissao" placeholder="Ex: Médico"></div>
+              <div class="fg"><label class="fl">Especialidade</label><input class="fi" id="p360-especialidade" placeholder="Ex: Dermatologia"></div>
+              <div class="fg"><label class="fl">Estado civil</label><select class="fs" id="p360-estado-civil"><option value="">—</option><option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></div>
+              <div class="fg"><label class="fl">Cidade</label><input class="fi" id="p360-cidade" placeholder="Ex: São Paulo/SP"></div>
+              <div class="fg"><label class="fl">Tem filhos?</label><select class="fs" id="p360-tem-filhos" onchange="document.getElementById('p360-filhos-wrap').style.display=this.value==='true'?'block':'none'"><option value="">—</option><option value="true">Sim</option><option value="false">Não</option></select></div>
+              <div class="fg"><label class="fl">Quantos</label><input class="fi" id="p360-qtd-filhos" type="number" min="0" placeholder="0"></div>
+              <div class="fg full" id="p360-filhos-wrap" style="display:none"><label class="fl">Filhos (nomes/idades)</label><input class="fi" id="p360-filhos-detalhe" placeholder="Ex: João (8), Maria (5)"></div>
+              <div class="fg full"><label class="fl">Data de nascimento</label><input class="fi" id="p360-data-nasc" type="date"></div>
+              <div class="fg full"><label class="fl">Canal de contato preferido</label><select class="fs" id="p360-canal"><option value="">—</option><option>WhatsApp</option><option>Ligação</option><option>E-mail</option><option>Instagram</option></select></div>
+              <div class="fg full"><label class="fl">Interesses / hobbies</label><input class="fi" id="p360-interesses" placeholder="Ex: golf, corrida, vinhos..."></div>
+              <div class="fg full"><label class="fl">Observações pessoais</label><textarea class="fta" id="p360-obs-pessoais" rows="3" placeholder="Contexto de vida, momento, sensibilidades..."></textarea></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-g" onclick="closeM('m-p360')">Fechar</button>
+      <button class="btn btn-p" onclick="p360Salvar()">💾 Salvar Perfil</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 // ════════════════════════════════════════════
@@ -1016,8 +1194,9 @@ async function initApp(user){
 
 // ── LOADERS ──
 async function loadAll(){
-  await Promise.all([loadLeads(),loadCF(),loadCV(),loadEntradas(),loadColabs(),loadVagas(),loadPlanos(),loadFunilEtapas()]);
+  await Promise.all([loadLeads(),loadCF(),loadCV(),loadEntradas(),loadColabs(),loadVagas(),loadPlanos(),loadFunilEtapas(),loadClientesFromDB(),loadClientes360Map(),loadAlertas()]);
   fillLeadSelects();
+  setInterval(loadAlertas,5*60*1000);
 }
 async function loadFunilEtapas(){
   const {data}=await DB.from('funil_etapas').select('*').eq('empresa_id',EID).order('cargo').order('ordem');
@@ -1050,7 +1229,7 @@ async function loadPlanos(){const{data}=await DB.from('plano_acao_financeiro').s
 function fillLeadSelects(){
   const vd=leads.filter(l=>l.st==='venda');
   const todos=leads;
-  ['mcv-lead','me-lead'].forEach(id=>{
+  ['mcv-lead','me-lead','mca-lead'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const base=id==='me-lead'?'<option value="">— manual —</option>':'<option value="">— nenhum —</option>';
     el.innerHTML=base+vd.map(l=>`<option value="${l.dbId}">${l.nm}</option>`).join('');
@@ -1104,10 +1283,11 @@ function renderView(nm){
   else if(nm==='metas')renderMetas();
   else if(nm==='equipe')renderEquipe();
   else if(nm==='jornada')renderJornada();
+  else if(nm==='clientes')renderClientes();
 }
 
 // ── NAV ──
-const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto',metas:'Minhas Metas',equipe:'Equipe Comercial',jornada:'Minha Jornada'};
+const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto',metas:'Minhas Metas',equipe:'Equipe Comercial',jornada:'Minha Jornada',clientes:'Clientes Ativos'};
 function nav(nm,el){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-'+nm)?.classList.add('on');
@@ -2473,6 +2653,325 @@ async function removerVendedor(id, nome){
   toast(`✓ Acesso de ${nome} removido.`);
   await renderEquipe();
 }
+// ─────────────── CLIENTES ATIVOS · PÓS-VENDA (PERFIL 360°) ───────────────
+let clientesAtivos=[];
+let clientes360Map={};
+let alertasAbertos=[];
+const TIER_LBL={top:'★ Top 10%',consolidado:'Consolidado',novo:'Novo (<30d)',risco:'Em risco'};
+const P360_HS_LBL={saudavel:'✓ Saudável',atencao:'⚠ Atenção',risco:'⚠ Risco de churn',sem_dados:'Sem dados'};
+const P360_ALERTA_LBL={aniversario:'🎂 é aniversário dele(a) — manda uma mensagem',pagamento:'💰 tem pagamento próximo do vencimento',churn:'⚠️ está sem contato há tempo — ligar ou mandar mensagem',upsell:'💡 está saudável e lucrativo — bom momento pra oferecer o próximo passo',reconhecimento:'🌟 já indicou várias pessoas — vale um agradecimento'};
+const ALERTA_IC={aniversario:'🎂',pagamento:'💰',churn:'⚠️',upsell:'💡',reconhecimento:'🌟'};
+const ALERTA_LBL={aniversario:'Aniversário',pagamento:'Pagamento',churn:'Risco de churn',upsell:'Oportunidade',reconhecimento:'Reconhecimento'};
+
+async function loadClientesFromDB(){
+  const{data,error}=await DB.from('clientes_ativos').select('*').eq('empresa_id',EID).order('criado_em',{ascending:true});
+  if(error){console.error('loadClientesFromDB erro:',error);return;}
+  clientesAtivos=data||[];
+}
+async function loadClientes360Map(){
+  const{data,error}=await DB.from('vw_cliente_360').select('*').eq('empresa_id',EID);
+  if(error){console.error('loadClientes360Map erro:',error);return;}
+  clientes360Map=Object.fromEntries((data||[]).map(d=>[d.cliente_id,d]));
+}
+async function loadAlertas(){
+  if(!EID)return;
+  const{data,error}=await DB.from('alertas').select('*').eq('empresa_id',EID).eq('status','aberto').order('criado_em',{ascending:false});
+  if(error){console.error('loadAlertas erro:',error);return;}
+  alertasAbertos=data||[];
+  renderAlertas();
+  if(typeof renderClientes==='function'&&document.getElementById('clientesWrap'))renderClientes();
+}
+function renderAlertas(){
+  const badge=document.getElementById('alert-badge');
+  const countLbl=document.getElementById('alert-panel-count');
+  const n=alertasAbertos.length;
+  if(badge){badge.textContent=n>99?'99+':n;badge.style.display=n>0?'flex':'none';}
+  if(countLbl)countLbl.textContent=n?`${n} aberto${n>1?'s':''}`:'';
+  const list=document.getElementById('alert-panel-list');
+  if(!list)return;
+  if(!n){list.innerHTML='<div class="alert-empty">Nenhum alerta aberto 🎉</div>';return;}
+  list.innerHTML=alertasAbertos.map(a=>`
+    <div class="alert-item">
+      <div class="alert-item-top">
+        <span class="alert-tag alert-tag-${a.tipo}">${ALERTA_IC[a.tipo]||'•'} ${ALERTA_LBL[a.tipo]||a.tipo}</span>
+        <span class="alert-date">${fdt(a.data_referencia)}</span>
+      </div>
+      <div class="alert-msg">${a.titulo?`<b>${a.titulo}</b><br>`:''}${a.mensagem}</div>
+      <div class="alert-item-actions">
+        <button class="btn btn-xs btn-g" onclick="marcarAlerta('${a.id}','lido')">Marcar lido</button>
+        <button class="btn btn-xs btn-p" onclick="marcarAlerta('${a.id}','resolvido')">Resolver</button>
+      </div>
+    </div>`).join('');
+}
+function toggleAlertasPanel(ev){
+  if(ev)ev.stopPropagation();
+  document.getElementById('alert-panel').classList.toggle('on');
+}
+document.addEventListener('click',(e)=>{
+  const wrap=document.querySelector('.alert-bell-wrap');
+  const panel=document.getElementById('alert-panel');
+  if(panel&&panel.classList.contains('on')&&wrap&&!wrap.contains(e.target))panel.classList.remove('on');
+});
+async function marcarAlerta(id,status){
+  const upd={status};
+  if(status==='resolvido')upd.resolvido_em=new Date().toISOString();
+  const{error}=await DB.from('alertas').update(upd).eq('id',id);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  alertasAbertos=alertasAbertos.filter(a=>a.id!==id);
+  renderAlertas();
+  if(typeof renderClientes==='function'&&document.getElementById('clientesWrap'))renderClientes();
+  toast(status==='resolvido'?'✓ Alerta resolvido':'✓ Marcado como lido');
+}
+
+function renderClientes(){
+  const q=(document.getElementById('cl-search')?.value||'').toLowerCase();
+  const lista=clientesAtivos.filter(c=>!q||c.nome.toLowerCase().includes(q));
+  const saud=lista.filter(c=>clientes360Map[c.id]?.health_status==='saudavel').length;
+  const risco=lista.filter(c=>clientes360Map[c.id]?.health_status==='risco').length;
+  const kpis=document.getElementById('cl-kpis');
+  if(kpis)kpis.innerHTML=[{l:'Clientes Ativos',v:clientesAtivos.length,kc:'var(--c)'},{l:'Saudáveis',v:saud,kc:'var(--g)'},{l:'Em risco',v:risco,kc:'var(--r)'}].map(c=>`<div class="kpi" style="--kc:${c.kc}"><div class="kpi-lbl">${c.l}</div><div class="kpi-val">${c.v}</div></div>`).join('');
+  const wrap=document.getElementById('clientesWrap');
+  if(!wrap)return;
+  if(!lista.length){wrap.innerHTML='<div class="empty"><div class="empty-ic">☺</div><div class="empty-tx">Nenhum cliente ativo ainda</div></div>';return;}
+  wrap.innerHTML=lista.map(c=>{
+    const t360=clientes360Map[c.id];
+    const tierBadge=t360?`<span class="p360-badge p360-badge-tier-${t360.tier}">${TIER_LBL[t360.tier]||t360.tier}</span>`:'';
+    const hs=t360?.health_status||'sem_dados';
+    const healthBadge=`<span class="p360-badge p360-badge-${hs}">${P360_HS_LBL[hs]||hs}</span>`;
+    const nAlertas=alertasAbertos.filter(a=>a.cliente_id===c.id).length;
+    const alertaDot=nAlertas?`<span title="${nAlertas} alerta(s) aberto(s)" style="background:var(--r);color:#fff;border-radius:20px;font-family:var(--f-mono);font-size:9px;padding:2px 6px">🔔 ${nAlertas}</span>`:'';
+    const proxAcao=t360&&t360.proxima_acao?`<div style="font-size:11px;color:var(--c);margin-top:4px">➜ ${t360.proxima_acao}${t360.proxima_acao_data?' · '+fdt(t360.proxima_acao_data):''}</div>`:'';
+    return`<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:var(--f-title);font-size:14px;font-weight:700">${c.nome}</span>${tierBadge}${healthBadge}${alertaDot}</div>
+          <div style="font-size:11px;color:var(--t2);font-family:var(--f-mono);margin-top:3px">${c.resp||'—'} · ${c.produto||'—'} · desde ${fdt(c.inicio)}</div>
+          ${proxAcao}
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-p btn-xs" onclick="abrirPerfil360('${c.id}')">👁 360°</button>
+          <button class="btn btn-g btn-xs" onclick="editarClienteAtivo('${c.id}')">✏ Editar</button>
+          <button class="btn btn-r btn-xs" onclick="removerClienteAtivo('${c.id}','${c.nome.replace(/'/g,"\\'")}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirNovoCliente(){
+  document.getElementById('mca-id').value='';
+  document.getElementById('mca-title').textContent='+ Novo Cliente Ativo';
+  document.getElementById('mca-nome').value='';
+  document.getElementById('mca-lead').value='';
+  document.getElementById('mca-resp').value='';
+  document.getElementById('mca-prod').value='';
+  document.getElementById('mca-inicio').value=td();
+  document.getElementById('mca-obs').value='';
+  openM('m-cliente');
+}
+function editarClienteAtivo(id){
+  const c=clientesAtivos.find(x=>String(x.id)===String(id));
+  if(!c)return;
+  document.getElementById('mca-id').value=c.id;
+  document.getElementById('mca-title').textContent='Editar Cliente Ativo';
+  document.getElementById('mca-nome').value=c.nome||'';
+  document.getElementById('mca-lead').value=c.lead_id||'';
+  document.getElementById('mca-resp').value=c.resp||'';
+  document.getElementById('mca-prod').value=c.produto||'';
+  document.getElementById('mca-inicio').value=c.inicio||'';
+  document.getElementById('mca-obs').value=c.obs||'';
+  openM('m-cliente');
+}
+async function salvarClienteAtivo(){
+  const id=document.getElementById('mca-id').value;
+  const nome=document.getElementById('mca-nome').value.trim();
+  if(!nome){toast('Preencha o nome do cliente','err');return;}
+  const payload={
+    empresa_id:EID,nome,
+    lead_id:document.getElementById('mca-lead').value||null,
+    resp:document.getElementById('mca-resp').value.trim()||null,
+    produto:document.getElementById('mca-prod').value.trim()||null,
+    inicio:document.getElementById('mca-inicio').value||null,
+    obs:document.getElementById('mca-obs').value.trim()||'',
+    atualizado_em:new Date().toISOString()
+  };
+  if(id){
+    const{error}=await DB.from('clientes_ativos').update(payload).eq('id',id);
+    if(error){toast('Erro ao salvar: '+error.message,'err');return;}
+    toast('✓ Cliente atualizado!');
+  }else{
+    const{error}=await DB.from('clientes_ativos').insert(payload);
+    if(error){toast('Erro ao criar: '+error.message,'err');return;}
+    toast('✓ Cliente ativo adicionado!');
+  }
+  closeM('m-cliente');
+  await loadClientesFromDB();
+  await loadClientes360Map();
+  renderClientes();
+}
+async function removerClienteAtivo(id,nome){
+  if(!confirm(`Remover "${nome}" dos clientes ativos?`))return;
+  const{error}=await DB.from('clientes_ativos').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  clientesAtivos=clientesAtivos.filter(c=>String(c.id)!==String(id));
+  toast('Cliente removido');
+  renderClientes();
+}
+
+/* ── PERFIL 360° ── */
+let p360Data=null;
+
+async function abrirPerfil360(clienteId){
+  openM('m-p360');
+  document.getElementById('p360-nome').textContent='◈ Carregando...';
+  document.getElementById('p360-timeline').innerHTML='<div class="empty" style="padding:14px"><div class="empty-tx">Carregando...</div></div>';
+  const{data,error}=await DB.from('vw_cliente_360').select('*').eq('cliente_id',clienteId).single();
+  if(error){toast('Erro ao carregar perfil: '+error.message,'err');closeM('m-p360');return;}
+  p360Data=data;
+
+  document.getElementById('p360-nome').textContent='◈ '+data.nome;
+  document.getElementById('p360-sub').textContent=(data.lead_pk?`Lead #${data.lead_pk} · `:'')+(data.origem||'origem não informada');
+  const tierBadge=document.getElementById('p360-tier-badge');
+  tierBadge.textContent=TIER_LBL[data.tier]||data.tier||'—';
+  tierBadge.className='p360-badge p360-badge-tier-'+(data.tier||'consolidado');
+
+  document.getElementById('p360-produto').textContent=data.produto||'—';
+  document.getElementById('p360-inicio').textContent=fdt(data.inicio);
+  document.getElementById('p360-resp').textContent=data.resp||'—';
+  document.getElementById('p360-aniv').textContent=data.data_nascimento?fdt(data.data_nascimento):'não informado';
+  document.getElementById('p360-ultima-interacao').textContent=data.ultima_interacao?new Date(data.ultima_interacao).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+(data.dias_sem_interacao!=null?` (há ${data.dias_sem_interacao}d)`:''):'sem registro ainda';
+
+  const hs=data.health_status||'sem_dados';
+  const badge=document.getElementById('p360-health-badge');
+  badge.textContent=P360_HS_LBL[hs]||hs;
+  badge.className='p360-badge p360-badge-'+hs;
+  const score=data.health_score??0;
+  const bar=document.getElementById('p360-health-bar');
+  bar.style.width=score+'%';
+  bar.style.background=score>=70?'var(--g)':score>=40?'var(--y)':'var(--r)';
+  document.getElementById('p360-health-score').textContent='score '+score;
+
+  document.getElementById('p360-receita').textContent=R(data.receita_total||0);
+  document.getElementById('p360-custo').textContent=R(data.custo_total||0);
+  const lucroEl=document.getElementById('p360-lucro');
+  lucroEl.textContent=R(data.lucro||0);
+  lucroEl.style.color=(data.lucro||0)>=0?'var(--g)':'var(--r)';
+  document.getElementById('p360-indicacoes').textContent=data.qtd_indicacoes+(data.receita_gerada_por_indicacoes?` · gerou ${R(data.receita_gerada_por_indicacoes)}`:'');
+
+  document.getElementById('p360-profissao').value=data.profissao||'';
+  document.getElementById('p360-especialidade').value=data.especialidade||'';
+  document.getElementById('p360-estado-civil').value=data.estado_civil||'';
+  document.getElementById('p360-cidade').value=data.cidade||'';
+  document.getElementById('p360-tem-filhos').value=data.tem_filhos===true?'true':data.tem_filhos===false?'false':'';
+  document.getElementById('p360-filhos-wrap').style.display=data.tem_filhos?'block':'none';
+  document.getElementById('p360-qtd-filhos').value=data.qtd_filhos??'';
+  document.getElementById('p360-filhos-detalhe').value=data.filhos_detalhe||'';
+  document.getElementById('p360-data-nasc').value=data.data_nascimento||'';
+  document.getElementById('p360-canal').value=data.canal_preferido||'';
+  document.getElementById('p360-interesses').value=data.interesses||'';
+  document.getElementById('p360-obs-pessoais').value=data.observacoes_pessoais||'';
+  document.getElementById('p360-perfil-fonte').value=data.perfil_fonte||'';
+  document.getElementById('p360-nova-nota').value='';
+  document.getElementById('p360-tempo-resposta').value='';
+
+  document.getElementById('p360-proxima-acao').value=data.proxima_acao||'';
+  document.getElementById('p360-proxima-acao-data').value=data.proxima_acao_data||'';
+
+  const alertasDoCliente=alertasAbertos.filter(a=>a.cliente_id===clienteId||(data.lead_pk&&a.lead_id===data.lead_pk));
+  const prioridade=['churn','pagamento','aniversario','upsell','reconhecimento'];
+  alertasDoCliente.sort((a,b)=>prioridade.indexOf(a.tipo)-prioridade.indexOf(b.tipo));
+  const sugEl=document.getElementById('p360-sugestao');
+  if(alertasDoCliente.length){
+    sugEl.innerHTML=`Sugestão automática: <b>${P360_ALERTA_LBL[alertasDoCliente[0].tipo]||alertasDoCliente[0].mensagem}</b> <button class="btn btn-g btn-xs" style="margin-left:6px" onclick="p360UsarSugestao()">usar</button>`;
+  }else{
+    sugEl.textContent='Nenhum alerta automático pra esse cliente agora — defina uma ação manual se quiser.';
+  }
+
+  p360CarregarTimeline(data.lead_pk);
+}
+
+function p360UsarSugestao(){
+  if(!p360Data)return;
+  const alertasDoCliente=alertasAbertos.filter(a=>a.cliente_id===p360Data.cliente_id||(p360Data.lead_pk&&a.lead_id===p360Data.lead_pk));
+  if(!alertasDoCliente.length)return;
+  const prioridade=['churn','pagamento','aniversario','upsell','reconhecimento'];
+  alertasDoCliente.sort((a,b)=>prioridade.indexOf(a.tipo)-prioridade.indexOf(b.tipo));
+  document.getElementById('p360-proxima-acao').value=(P360_ALERTA_LBL[alertasDoCliente[0].tipo]||alertasDoCliente[0].mensagem).replace(/^[^\s]+\s/,'');
+  const d=new Date();d.setDate(d.getDate()+(alertasDoCliente[0].tipo==='churn'?1:2));
+  document.getElementById('p360-proxima-acao-data').value=d.toISOString().slice(0,10);
+}
+
+async function p360SalvarProximaAcao(){
+  if(!p360Data)return;
+  const proxima_acao=document.getElementById('p360-proxima-acao').value.trim()||null;
+  const proxima_acao_data=document.getElementById('p360-proxima-acao-data').value||null;
+  const{error}=await DB.from('clientes_ativos').update({proxima_acao,proxima_acao_data}).eq('id',p360Data.cliente_id);
+  if(error){toast('Erro ao salvar ação: '+error.message,'err');return;}
+  toast('✓ Próxima ação salva');
+  await loadClientes360Map();
+  renderClientes();
+}
+
+async function p360CarregarTimeline(leadPk){
+  const el=document.getElementById('p360-timeline');
+  if(!leadPk){el.innerHTML='<div class="empty" style="padding:14px"><div class="empty-tx">Cliente sem lead vinculado — sem histórico de atividades</div></div>';return;}
+  const{data,error}=await DB.from('lead_atividades').select('*').eq('lead_id',leadPk).order('criado_em',{ascending:false}).limit(15);
+  if(error){el.innerHTML='<div class="empty" style="padding:14px"><div class="empty-tx">Erro ao carregar timeline</div></div>';return;}
+  if(!data||!data.length){el.innerHTML='<div class="empty" style="padding:14px"><div class="empty-tx">Nenhuma interação registrada ainda</div></div>';return;}
+  const SLA_LBL={menos_1h:'⚡ <1h',"1_4h":'1-4h',"4_24h":'4-24h',mais_24h:'+24h'};
+  el.innerHTML=data.map(a=>`<div class="p360-tl-item"><span class="p360-tl-dot"></span><div><div style="color:var(--tx)">${a.descricao||a.tipo||'—'}</div><div style="font-family:var(--f-mono);font-size:10px;color:var(--t3);margin-top:1px">${a.usuario||'—'} · ${new Date(a.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}${a.tempo_resposta?' · resp. '+(SLA_LBL[a.tempo_resposta]||a.tempo_resposta):''}</div></div></div>`).join('');
+}
+
+async function p360RegistrarInteracao(){
+  if(!p360Data)return;
+  if(!p360Data.lead_pk){toast('Este cliente não tem lead vinculado — não dá pra registrar timeline','wrn');return;}
+  const txt=document.getElementById('p360-nova-nota').value.trim();
+  if(!txt){toast('Digite a interação primeiro','wrn');return;}
+  const tempo_resposta=document.getElementById('p360-tempo-resposta').value||null;
+  const usuario=VENDEDOR_SESSAO?.nome||(document.getElementById('u-nm')?.textContent||'');
+  const{error}=await DB.from('lead_atividades').insert({empresa_id:EID,lead_id:p360Data.lead_pk,tipo:'nota',descricao:txt,usuario,tempo_resposta});
+  if(error){toast('Erro: '+error.message,'err');return;}
+  document.getElementById('p360-nova-nota').value='';
+  document.getElementById('p360-tempo-resposta').value='';
+  toast('✓ Interação registrada');
+  await p360CarregarTimeline(p360Data.lead_pk);
+  loadAlertas();
+}
+
+async function p360Salvar(){
+  if(!p360Data)return;
+  const temFilhosRaw=document.getElementById('p360-tem-filhos').value;
+  const perfil={
+    cliente_id:p360Data.cliente_id,
+    empresa_id:EID,
+    profissao:document.getElementById('p360-profissao').value.trim()||null,
+    especialidade:document.getElementById('p360-especialidade').value.trim()||null,
+    estado_civil:document.getElementById('p360-estado-civil').value||null,
+    cidade:document.getElementById('p360-cidade').value.trim()||null,
+    tem_filhos:temFilhosRaw===''?null:temFilhosRaw==='true',
+    qtd_filhos:document.getElementById('p360-qtd-filhos').value?parseInt(document.getElementById('p360-qtd-filhos').value):null,
+    filhos_detalhe:document.getElementById('p360-filhos-detalhe').value.trim()||null,
+    canal_preferido:document.getElementById('p360-canal').value||null,
+    interesses:document.getElementById('p360-interesses').value.trim()||null,
+    observacoes_pessoais:document.getElementById('p360-obs-pessoais').value.trim()||null,
+    perfil_fonte:document.getElementById('p360-perfil-fonte').value||null,
+    atualizado_em:new Date().toISOString()
+  };
+  const{error:errPerfil}=await DB.from('clientes_perfil').upsert(perfil,{onConflict:'cliente_id'});
+  if(errPerfil){toast('Erro ao salvar perfil: '+errPerfil.message,'err');return;}
+
+  const dataNasc=document.getElementById('p360-data-nasc').value||null;
+  if(p360Data.lead_pk){
+    const{error:errLead}=await DB.from('leads').update({data_nascimento:dataNasc}).eq('id',p360Data.lead_pk);
+    if(errLead){toast('Perfil salvo, mas erro ao salvar aniversário: '+errLead.message,'wrn');closeM('m-p360');return;}
+  }
+  toast('✓ Perfil 360° salvo');
+  await loadClientes360Map();
+  renderClientes();
+  closeM('m-p360');
+}
+// ─────────────── FIM CLIENTES ATIVOS · PÓS-VENDA ───────────────
+
 // ─────────────── TIMELINE DE ATIVIDADES ───────────────
 const TIPO_ICON={whatsapp:'💬',ligacao:'📞',email:'📧',reuniao:'🤝',nota:'📝',sistema:'⚙️'};
 
