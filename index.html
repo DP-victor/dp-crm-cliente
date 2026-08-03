@@ -1160,6 +1160,18 @@ async function doLogout(){
   location.reload();
 }
 async function checkSession(){const{data}=await DB.auth.getSession();if(data.session)await initApp(data.session.user);}
+// Garante que existe uma sessão Supabase Auth válida (não sessão de vendedor via sessionStorage)
+// antes de qualquer escrita sensível. Evita erros de RLS confusos quando o token expira/some.
+async function ensureAuthSession(){
+  if(VENDEDOR_SESSAO)return true; // vendedores não passam por aqui nas telas admin-only
+  const {data,error}=await DB.auth.getSession();
+  if(error||!data?.session){
+    toast('Sua sessão expirou. Faça login novamente.','err');
+    setTimeout(()=>{ sessionStorage.removeItem('dp_vend'); location.reload(); },1600);
+    return false;
+  }
+  return true;
+}
 async function doSolicitar(){
   const co=document.getElementById('c-co').value.trim();
   const nm=document.getElementById('c-nm').value.trim();
@@ -2632,14 +2644,20 @@ async function salvarVendedor(){
   const cargo=document.getElementById('mv-cargo').value;
   const ativo=document.getElementById('mv-ativo').value==='true';
   if(!nome||!email||!senha){toast('Preencha nome, e-mail e senha.','err');return;}
+  if(!(await ensureAuthSession()))return;
   const payload={empresa_id:EID,nome,email,senha,perfil:'comercial',cargo,ativo};
   if(id){
     const{error}=await DB.from('usuarios').update(payload).eq('id',id);
-    if(error){toast('Erro ao salvar: '+error.message,'err');return;}
+    if(error){toast(error.code==='42501'?'Sessão inválida. Recarregue a página e faça login novamente.':'Erro ao salvar: '+error.message,'err');return;}
     toast('✓ Acesso atualizado com sucesso!');
   } else {
     const{error}=await DB.from('usuarios').insert(payload);
-    if(error){if(error.code==='23505')toast('E-mail já cadastrado.','err');else toast('Erro: '+error.message,'err');return;}
+    if(error){
+      if(error.code==='23505')toast('E-mail já cadastrado.','err');
+      else if(error.code==='42501')toast('Sessão inválida. Recarregue a página e faça login novamente.','err');
+      else toast('Erro: '+error.message,'err');
+      return;
+    }
     toast('✓ Vendedor adicionado! Já pode acessar o portal.');
   }
   closeM('m-vendedor');
