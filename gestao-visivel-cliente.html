@@ -129,6 +129,8 @@ body{display:flex;flex-direction:column;padding:clamp(10px,1.4vmin,20px);gap:cla
 .rk .amt .v{font-weight:800;font-size:clamp(14px,1.75vmin,24px);color:var(--gold2)}
 .rk .amt .c{font-size:clamp(8px,.9vmin,11px);color:var(--t3)}
 .empty{flex:1;display:grid;place-items:center;color:var(--t3);font-family:var(--fm);font-size:clamp(11px,1.3vmin,16px);text-align:center}
+.rk-group-lbl{font-family:var(--fm);font-size:clamp(8px,.95vmin,12px);letter-spacing:2px;color:var(--t3);text-transform:uppercase;margin:2px 0 6px}
+.podium .rk-group-lbl:not(:first-child){margin-top:clamp(6px,.9vmin,12px)}
 .ministats{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vmin,16px);flex:0 0 auto}
 .ministat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:clamp(8px,1.2vmin,16px)}
 .ministat .l{font-family:var(--fm);font-size:clamp(8px,.95vmin,12px);letter-spacing:1.5px;color:var(--t2);text-transform:uppercase}
@@ -310,7 +312,7 @@ const now=new Date();
 let EID=null, EMPRESA=null;
 let periodo={mes:now.getMonth()+1,ano:now.getFullYear()};
 let compareMes=null;
-let data={leads:[],meta:null,custos:[],colabs:[],produtos:[]};
+let data={leads:[],meta:null,custos:[],colabs:[],produtos:[],usuarios:[]};
 let chartReceita=null,chartProduto=null;
 let seenVendaIds=new Set();
 let booted=false;
@@ -366,15 +368,16 @@ async function sair(){await sb.auth.signOut();location.reload();}
 async function loadAll(){
   if(!EID)return;
   try{
-    const [lr,mr,cr,kr,pr]=await Promise.all([
+    const [lr,mr,cr,kr,pr,ur]=await Promise.all([
       sb.from('leads').select('*').eq('empresa_id',EID),
       sb.from('metas_financeiras').select('*').eq('empresa_id',EID).eq('mes',periodo.mes).eq('ano',periodo.ano).maybeSingle(),
       sb.from('custos_cliente').select('*').eq('empresa_id',EID),
       sb.from('colaboradores').select('nome,foto_url,meta_mensal,status,cargo').eq('empresa_id',EID),
-      sb.from('produtos').select('nome,cor,ordem').eq('empresa_id',EID).eq('ativo',true).order('ordem')
+      sb.from('produtos').select('nome,cor,ordem').eq('empresa_id',EID).eq('ativo',true).order('ordem'),
+      sb.from('usuarios').select('nome,foto_url,cargo').eq('empresa_id',EID)
     ]);
     data.leads=lr.data||[]; data.meta=mr.data||null; data.custos=cr.data||[];
-    data.colabs=kr.data||[]; data.produtos=pr.data||[];
+    data.colabs=kr.data||[]; data.produtos=pr.data||[]; data.usuarios=ur.data||[];
     data.leads.filter(l=>l.status==='venda').forEach(l=>seenVendaIds.add(l.id));
     setLive(true);render();
   }catch(e){console.error('load',e);setLive(false);}
@@ -505,20 +508,28 @@ function renderProduto(vendas){
 
 function renderRanking(vendas){
   const box=document.getElementById('podium');
-  const map={};
-  vendas.forEach(l=>{const v=(l.vendedor||'').trim();if(!v)return;
-    if(!map[v])map[v]={nome:v,total:0,n:0};map[v].total+=(+l.receita||0);map[v].n++;});
-  const rank=Object.values(map).sort((a,b)=>b.total-a.total);
-  const fotoDe={};data.colabs.forEach(c=>{if(c.nome)fotoDe[c.nome.trim().toLowerCase()]=c.foto_url;});
-  if(!rank.length){box.innerHTML='<div class="empty">Ainda sem vendas neste mês.<br>A primeira que entrar aparece aqui. 🏆</div>';return;}
-  const medals=['🥇','🥈','🥉'];const totalGeral=rank.reduce((s,x)=>s+x.total,0);
-  box.innerHTML=rank.slice(0,6).map((r,i)=>{
-    const foto=fotoDe[r.nome.toLowerCase()];
-    const ava=foto?`<img class="ava" src="${foto}" alt="">`:`<div class="ava">${initials(r.nome)}</div>`;
-    return `<div class="rk ${i<3?'p'+(i+1):''}"><span class="medal">${medals[i]||(i+1)+'º'}</span>${ava}
-      <div class="who"><div class="nm">${r.nome}</div><div class="sub">${r.n} venda(s)</div></div>
-      <div class="amt"><div class="v">${Rk(r.total)}</div><div class="c">${((r.total/totalGeral)*100).toFixed(0)}% do total</div></div></div>`;
-  }).join('');
+  // mapa de fotos: colaboradores (RH) + usuarios (auto-upload do vendedor)
+  const fotoDe={};
+  (data.colabs||[]).forEach(c=>{if(c.nome&&c.foto_url)fotoDe[c.nome.trim().toLowerCase()]=c.foto_url;});
+  (data.usuarios||[]).forEach(u=>{if(u.nome&&u.foto_url&&!fotoDe[u.nome.trim().toLowerCase()])fotoDe[u.nome.trim().toLowerCase()]=u.foto_url;});
+  const ava=nome=>{const f=fotoDe[nome.toLowerCase()];return f?`<img class="ava" src="${f}" alt="">`:`<div class="ava">${initials(nome)}</div>`;};
+  // closers: por vendedor (receita fechada)
+  const cmap={};vendas.forEach(l=>{const v=(l.vendedor||'').trim();if(!v)return;if(!cmap[v])cmap[v]={nome:v,total:0,n:0};cmap[v].total+=(+l.receita||0);cmap[v].n++;});
+  const closers=Object.values(cmap).sort((a,b)=>b.total-a.total);
+  // bdrs: por prospectador (vendas originadas)
+  const bmap={};vendas.forEach(l=>{const b=(l.prospectador||'').trim();if(!b)return;if(!bmap[b])bmap[b]={nome:b,total:0,n:0};bmap[b].total+=(+l.receita||0);bmap[b].n++;});
+  const bdrs=Object.values(bmap).sort((a,b)=>b.n-a.n||b.total-a.total);
+  const medals=['🥇','🥈','🥉'];
+  const rows=(list,orig)=>{
+    if(!list.length)return '<div class="empty" style="padding:12px 0;min-height:0">— sem vendas neste mês —</div>';
+    const tot=list.reduce((s,x)=>s+x.total,0)||1;
+    return list.slice(0,4).map((r,i)=>`<div class="rk ${i<3?'p'+(i+1):''}"><span class="medal">${medals[i]||(i+1)+'º'}</span>${ava(r.nome)}
+      <div class="who"><div class="nm">${r.nome}</div><div class="sub">${r.n} venda(s)${orig?' originada(s)':''}</div></div>
+      <div class="amt"><div class="v">${Rk(r.total)}</div><div class="c">${((r.total/tot)*100).toFixed(0)}%</div></div></div>`).join('');
+  };
+  if(!closers.length&&!bdrs.length){box.innerHTML='<div class="empty">Ainda sem vendas neste mês.<br>A primeira que entrar aparece aqui. 🏆</div>';return;}
+  box.innerHTML=`<div class="rk-group-lbl">🎯 Closers · fechamento</div>${rows(closers,false)}
+    <div class="rk-group-lbl">🔎 BDR / SDR · originação</div>${rows(bdrs,true)}`;
 }
 
 /* ================= CELEBRAÇÃO ================= */
