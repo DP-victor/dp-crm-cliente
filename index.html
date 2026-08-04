@@ -409,6 +409,7 @@ tr:last-child td{border-bottom:none}
     <button class="sb-a sb-only-admin" onclick="nav('rh',this)"><span class="ic">⊛</span>RH & Colaboradores</button>
     <button class="sb-a sb-only-admin" onclick="nav('vagas',this)"><span class="ic">◑</span>Vagas em Aberto</button>
     <button class="sb-a sb-only-admin" onclick="nav('equipe',this)"><span class="ic">◈</span>Equipe Comercial</button>
+    <button class="sb-a sb-only-admin" onclick="nav('objetivos',this)"><span class="ic">◎</span>Metas da Empresa</button>
   </nav>
   <div class="sb-foot">
     <div class="u-row">
@@ -756,8 +757,44 @@ tr:last-child td{border-bottom:none}
     <div id="equipe-lista"></div>
   </div>
 
+  <!-- ── METAS DA EMPRESA (admin) ── -->
+  <div class="view" id="v-objetivos">
+    <div style="max-width:760px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:16px">Defina a meta de cada mês. Ela aparece direto no telão da <strong style="color:var(--c)">Gestão Visível</strong> e serve de termômetro pro time.</div>
+      <div style="background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:22px;margin-bottom:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:6px">
+          <div class="fg"><label class="fl">Mês</label><select class="fs" id="obj-mes" onchange="carregarMetaEmpresa()"></select></div>
+          <div class="fg"><label class="fl">Ano</label><select class="fs" id="obj-ano" onchange="carregarMetaEmpresa()"></select></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px">
+          <div class="fg"><label class="fl">Meta de faturamento R$</label><input class="fi" id="obj-fat" type="number" placeholder="0"/></div>
+          <div class="fg"><label class="fl">Meta de vendas</label><input class="fi" id="obj-vendas" type="number" placeholder="0"/></div>
+          <div class="fg"><label class="fl">Meta de leads</label><input class="fi" id="obj-leads" type="number" placeholder="0"/></div>
+        </div>
+        <button class="btn btn-p" onclick="salvarMetaEmpresa()" style="margin-top:6px">💾 Salvar meta do mês</button>
+        <span id="obj-msg" style="font-family:var(--f-mono);font-size:12px;color:var(--g);margin-left:12px"></span>
+      </div>
+      <div id="obj-progress"></div>
+    </div>
+  </div>
+
   <!-- ── METAS (VENDEDOR) ── -->
   <div class="view" id="v-metas">
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h"><div class="card-t">📸 Minha Foto</div></div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div id="vend-foto-prev" style="width:72px;height:72px;border-radius:50%;background:var(--s3);border:2px solid var(--b1);display:grid;place-items:center;overflow:hidden;font-family:var(--f-title);font-weight:800;font-size:24px;color:var(--c);flex-shrink:0">—</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Escolha uma foto sua que você curta. Ela aparece no <strong style="color:var(--c)">Hall do Campeão</strong> do telão quando você vende. É opcional.</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-p btn-sm" onclick="document.getElementById('vend-foto-inp').click()">Escolher foto</button>
+            <button class="btn btn-sm" id="vend-foto-rm" onclick="removerFotoVendedor()" style="display:none">Remover</button>
+          </div>
+          <input type="file" id="vend-foto-inp" accept="image/*" style="display:none" onchange="uploadFotoVendedor(this)"/>
+          <div id="vend-foto-msg" style="font-family:var(--f-mono);font-size:11px;color:var(--g);margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
     <div class="kg g4" id="meta-kpis"></div>
     <div class="card" style="margin-bottom:14px">
       <div class="card-h"><div class="card-t">🎯 Meta do Mês</div><div class="badge" id="meta-mes-badge">—</div></div>
@@ -1298,10 +1335,65 @@ function renderView(nm){
   else if(nm==='equipe')renderEquipe();
   else if(nm==='jornada')renderJornada();
   else if(nm==='clientes')renderClientes();
+  else if(nm==='objetivos')renderObjetivos();
+}
+
+// ── METAS DA EMPRESA (alimenta a TV Gestão Visível) ──
+function renderObjetivos(){
+  const M=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const d=new Date();
+  const sm=document.getElementById('obj-mes');
+  if(!sm.options.length){sm.innerHTML=M.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');sm.value=d.getMonth()+1;}
+  const sa=document.getElementById('obj-ano');
+  if(!sa.options.length){const y=d.getFullYear();sa.innerHTML=[y-1,y,y+1].map(a=>`<option value="${a}">${a}</option>`).join('');sa.value=y;}
+  carregarMetaEmpresa();
+}
+async function carregarMetaEmpresa(){
+  const mes=+document.getElementById('obj-mes').value, ano=+document.getElementById('obj-ano').value;
+  document.getElementById('obj-msg').textContent='';
+  const {data:m}=await DB.from('metas_financeiras').select('*').eq('empresa_id',EID).eq('mes',mes).eq('ano',ano).maybeSingle();
+  document.getElementById('obj-fat').value=m?m.meta_faturamento||'':'';
+  document.getElementById('obj-vendas').value=m?m.meta_vendas||'':'';
+  document.getElementById('obj-leads').value=m?m.meta_leads||'':'';
+  // progresso real
+  const {data:vd}=await DB.from('leads').select('receita,data_fechamento').eq('empresa_id',EID).eq('status','venda');
+  const emMes=(vd||[]).filter(l=>{if(!l.data_fechamento)return false;const x=new Date(l.data_fechamento);return x.getMonth()+1===mes&&x.getFullYear()===ano;});
+  const realizado=emMes.reduce((s,l)=>s+(+l.receita||0),0);
+  const metaFat=m?+m.meta_faturamento||0:0;
+  const p=metaFat>0?Math.min(100,realizado/metaFat*100):0;
+  const box=document.getElementById('obj-progress');
+  if(metaFat>0){
+    box.innerHTML=`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+        <div style="font-family:var(--f-mono);font-size:11px;letter-spacing:1.5px;color:var(--t2);text-transform:uppercase">Progresso · ${M[mes-1]} ${ano}</div>
+        <div style="font-family:var(--f-title);font-weight:800;font-size:22px;color:var(--c)">${p.toFixed(1).replace('.',',')}%</div>
+      </div>
+      <div style="height:16px;background:var(--s3);border-radius:8px;overflow:hidden">
+        <div style="height:100%;width:${p}%;background:linear-gradient(90deg,var(--c2),var(--c));border-radius:8px;transition:width .8s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-family:var(--f-mono);font-size:12px;color:var(--t2)">
+        <span>Realizado <strong style="color:var(--tx)">${R(realizado)}</strong></span>
+        <span>Meta <strong style="color:var(--tx)">${R(metaFat)}</strong></span>
+        <span>${emMes.length} venda(s)</span>
+      </div></div>`;
+  }else{box.innerHTML=`<div style="color:var(--t3);font-family:var(--f-mono);font-size:12px;padding:8px 2px">Defina uma meta de faturamento para ver o progresso.</div>`;}
+}
+async function salvarMetaEmpresa(){
+  const mes=+document.getElementById('obj-mes').value, ano=+document.getElementById('obj-ano').value;
+  const fat=+document.getElementById('obj-fat').value||0;
+  const vendas=+document.getElementById('obj-vendas').value||0;
+  const leadsM=+document.getElementById('obj-leads').value||0;
+  const {data:ex}=await DB.from('metas_financeiras').select('id').eq('empresa_id',EID).eq('mes',mes).eq('ano',ano).maybeSingle();
+  let error;
+  if(ex){({error}=await DB.from('metas_financeiras').update({meta_faturamento:fat,meta_vendas:vendas,meta_leads:leadsM}).eq('id',ex.id));}
+  else{({error}=await DB.from('metas_financeiras').insert({empresa_id:EID,mes,ano,meta_faturamento:fat,meta_vendas:vendas,meta_leads:leadsM}));}
+  if(error){toast('Erro ao salvar a meta.','err');return;}
+  document.getElementById('obj-msg').textContent='✓ Meta salva — já aparece no telão.';
+  carregarMetaEmpresa();
 }
 
 // ── NAV ──
-const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto',metas:'Minhas Metas',equipe:'Equipe Comercial',jornada:'Minha Jornada',clientes:'Clientes Ativos'};
+const VTITLES={overview:'Visão Geral',dashboard:'Dashboard BI',kanban:'Kanban',leads:'Leads & Pipeline',fin:'Financeiro',rh:'RH & Colaboradores',vagas:'Vagas em Aberto',metas:'Minhas Metas',equipe:'Equipe Comercial',jornada:'Minha Jornada',clientes:'Clientes Ativos',objetivos:'Metas da Empresa'};
 function nav(nm,el){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('v-'+nm)?.classList.add('on');
@@ -2310,6 +2402,42 @@ async function renderMetas(){
       </div>
     </div>`;
   }).join('') : '<div class="empty"><div class="empty-ic">◎</div><div class="empty-tx">Sem dados de ranking ainda</div></div>';
+  renderFotoVendedorWidget();
+}
+
+// ── FOTO DO VENDEDOR (self-service) ──
+function renderFotoVendedorWidget(){
+  const prev=document.getElementById('vend-foto-prev');if(!prev)return;
+  const rm=document.getElementById('vend-foto-rm');
+  const f=VENDEDOR_SESSAO&&VENDEDOR_SESSAO.foto_url;
+  if(f){prev.innerHTML=`<img src="${f}" style="width:100%;height:100%;object-fit:cover"/>`;if(rm)rm.style.display='';}
+  else{const nm=(VENDEDOR_SESSAO&&VENDEDOR_SESSAO.nome)||'?';prev.textContent=nm.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();if(rm)rm.style.display='none';}
+}
+function _resizeImg(file,max){return new Promise((res,rej)=>{
+  const rd=new FileReader();
+  rd.onload=()=>{const img=new Image();img.onload=()=>{
+    let w=img.width,h=img.height;const sc=Math.min(1,max/Math.max(w,h));w=Math.round(w*sc);h=Math.round(h*sc);
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+    res(cv.toDataURL('image/jpeg',0.82));};img.onerror=rej;img.src=rd.result;};
+  rd.onerror=rej;rd.readAsDataURL(file);});}
+async function uploadFotoVendedor(inp){
+  const file=inp.files&&inp.files[0];if(!file||!VENDEDOR_SESSAO)return;
+  const msg=document.getElementById('vend-foto-msg');msg.style.color='var(--t2)';msg.textContent='Processando...';
+  try{
+    const dataUrl=await _resizeImg(file,256);
+    const {error}=await DB.rpc('set_foto_usuario',{p_id:VENDEDOR_SESSAO.id,p_foto:dataUrl});
+    if(error)throw error;
+    VENDEDOR_SESSAO.foto_url=dataUrl;sessionStorage.setItem('dp_vend',JSON.stringify(VENDEDOR_SESSAO));
+    renderFotoVendedorWidget();msg.style.color='var(--g)';msg.textContent='✓ Foto salva! Já aparece no telão.';
+  }catch(e){console.error(e);msg.style.color='var(--r)';msg.textContent='Não deu certo. Tente uma imagem menor ou outro formato.';}
+  inp.value='';
+}
+async function removerFotoVendedor(){
+  if(!VENDEDOR_SESSAO)return;
+  const {error}=await DB.rpc('set_foto_usuario',{p_id:VENDEDOR_SESSAO.id,p_foto:null});
+  if(error){toast('Erro ao remover a foto.','err');return;}
+  VENDEDOR_SESSAO.foto_url=null;sessionStorage.setItem('dp_vend',JSON.stringify(VENDEDOR_SESSAO));
+  renderFotoVendedorWidget();document.getElementById('vend-foto-msg').textContent='';
 }
 
 async function renderJornada(){
